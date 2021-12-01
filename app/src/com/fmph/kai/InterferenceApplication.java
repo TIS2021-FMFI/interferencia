@@ -6,7 +6,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -15,10 +14,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -26,9 +23,6 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.VideoCapture;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -81,7 +75,7 @@ public class InterferenceApplication extends Application {
         SplitPane splitPane = new SplitPane();
         splitPane.setLayoutY(25);
         splitPane.orientationProperty().setValue(Orientation.HORIZONTAL);
-        ImageCanvas imageCanvas = new ImageCanvas(width/2, height - 25);
+        ImageCanvas imageCanvas = new ImageCanvas(2*width/3, height - 25);
 
         // Graph
         NumberAxis xAxis = new NumberAxis();
@@ -89,7 +83,7 @@ public class InterferenceApplication extends Application {
         xAxis.setLabel("X");
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setMaxWidth(width/2);
+        lineChart.setMaxWidth(width/3);
 
         splitPane.getItems().addAll(imageCanvas, lineChart);
 
@@ -166,6 +160,7 @@ public class InterferenceApplication extends Application {
                 }
 
                 while ((s = stdError.readLine()) != null) {
+                    // TODO: handle errors better
                     System.out.println(s);
                 }
             } catch (IOException ex) {
@@ -196,6 +191,7 @@ public class InterferenceApplication extends Application {
 
             result.ifPresent(cameraIndex -> {
                 if (!capture.open(cameraIndex + CAP_DSHOW)) {
+                    // TODO: need better exception handling
                     System.out.println("Error opening camera!");
                     return;
                 }
@@ -204,7 +200,8 @@ public class InterferenceApplication extends Application {
                 Runnable frameGrabber = () -> {
                     Image imageToShow = grabFrame();
                     Platform.runLater(() -> {
-                        imageCanvas.setImage(imageToShow);
+                        if (capturing)
+                            imageCanvas.setImage(imageToShow);
                     });
                 };
                 timer = Executors.newSingleThreadScheduledExecutor();
