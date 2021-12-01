@@ -1,4 +1,4 @@
-package com.fmph.kai;
+package com.fmph.kai.gui;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
