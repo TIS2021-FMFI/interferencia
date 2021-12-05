@@ -1,6 +1,9 @@
 package com.fmph.kai;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -9,6 +12,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
@@ -57,7 +62,7 @@ public class InterferenceApplication extends Application {
         SplitPane splitPane = new SplitPane();
         splitPane.setLayoutY(25);
         splitPane.orientationProperty().setValue(Orientation.HORIZONTAL);
-        ImageCanvas imageCanvas = new ImageCanvas(width/2, height - 25);
+        ImageCanvas imageCanvas = new ImageCanvas(width/2, height-200);
 
         // Graph
         NumberAxis xAxis = new NumberAxis();
@@ -117,7 +122,60 @@ public class InterferenceApplication extends Application {
             cameraCalibrationWindow.show();
         });
 
-        root.getChildren().addAll(menu, splitPane);
+        //first horizontal line
+        Label SliderCaption = new Label("Line thickness slider");
+        Label ParametresCaption = new Label("Setup parametres");
+
+        HBox layout1 = new HBox(120);
+        layout1.setPadding(new Insets(height-165, 20,20,450));
+        layout1.getChildren().addAll(SliderCaption, ParametresCaption);
+
+        //second horizontal line
+        TextField lenghtLine = new TextField("Enter the lenght of the line");
+        Button submit = new Button("Submit");
+        CheckBox selectLine = new CheckBox("Select line");
+        CheckBox selectPoint = new CheckBox("Select point");
+        Slider slider = new Slider();
+        slider.setMin(0);
+        slider.setMax(5);
+        slider.setShowTickLabels(true);
+        slider.setShowTickMarks(true);
+        slider.setMajorTickUnit(1);
+
+        Label SliderValue = new Label(Double.toString(slider.getValue()));
+        slider.valueProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                SliderValue.setText(String.format("%.2f", newValue));
+            }
+        });
+
+        HBox layout2 = new HBox(10);
+        layout2.setPadding(new Insets(height-160,20,20,20));
+        layout2.setLayoutY(25);
+        layout2.getChildren().addAll(lenghtLine,submit,selectLine,selectPoint,slider,SliderValue);
+
+        //third horizontal from right side
+        TextField par1 = new TextField();
+        par1.setPrefWidth(30);
+        TextField par2 = new TextField();
+        par2.setPrefWidth(30);
+        TextField par3 = new TextField();
+        par3.setPrefWidth(30);
+        Button submitPar = new Button("Submit");
+        Button genMaxMIn = new Button("Generate global max/min R");
+        Button pointCloud = new Button("Create point cloud file");
+
+
+        HBox layout3 = new HBox(10);
+        layout3.setPadding(new Insets(height-160,20,20,width-700));
+        layout3.setLayoutY(25);
+        layout3.getChildren().addAll(par1,par2,par3, submitPar, genMaxMIn, pointCloud);
+
+
+
+
+        root.getChildren().addAll(menu, splitPane,layout1, layout2, layout3);
     }
 
     public static void main(String[] args) {
