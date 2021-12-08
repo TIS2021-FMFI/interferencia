@@ -1,10 +1,7 @@
 package com.fmph.kai;
 
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
-import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -12,8 +9,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
@@ -23,14 +19,12 @@ import java.io.File;
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
-    private final double width = 1366;
-    private final double height = 768;
+    private final double width = 900;
+    private final double height = 800;
 
     private Group root;
     private Stage stage;
     private Scene scene;
-
-    private double lineSize;
 
     @Override
     public void start(Stage stage) {
@@ -46,6 +40,11 @@ public class InterferenceApplication extends Application {
     }
 
     private void initializeGUI() {
+        // Border Pane
+        BorderPane borderPane = new BorderPane();
+        borderPane.setPrefWidth(width);
+        borderPane.setPrefHeight(height);
+
         // Menu Bar
         MenuBar menu = new MenuBar();
         Menu fileMenu = new Menu("File");
@@ -57,12 +56,11 @@ public class InterferenceApplication extends Application {
         fileMenu.getItems().addAll(openMenuItem, cameraCalibrationMenuItem);
         editMenu.getItems().addAll(setLineSizeMenuItem, resetLineMenuItem);
         menu.getMenus().addAll(fileMenu, editMenu);
+        borderPane.setTop(menu);
 
-        // Split Pane
-        SplitPane splitPane = new SplitPane();
-        splitPane.setLayoutY(25);
-        splitPane.orientationProperty().setValue(Orientation.HORIZONTAL);
+        // ImageCanvas
         ImageCanvas imageCanvas = new ImageCanvas(width/2, height-200);
+        borderPane.setLeft(imageCanvas);
 
         // Graph
         NumberAxis xAxis = new NumberAxis();
@@ -71,8 +69,7 @@ public class InterferenceApplication extends Application {
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setMaxWidth(width/2);
-
-        splitPane.getItems().addAll(imageCanvas, lineChart);
+        borderPane.setRight(lineChart);
 
         // Actions
         openMenuItem.setOnAction(e -> {
@@ -108,7 +105,7 @@ public class InterferenceApplication extends Application {
             TextInputDialog tid = new TextInputDialog();
             tid.setHeaderText("Enter new line size:");
             tid.setOnHidden(event -> {
-                lineSize = Double.parseDouble(tid.getEditor().getText());
+                // lineSize = Double.parseDouble(tid.getEditor().getText());
             });
             tid.show();
         });
@@ -122,60 +119,88 @@ public class InterferenceApplication extends Application {
             cameraCalibrationWindow.show();
         });
 
-        //first horizontal line
-        Label SliderCaption = new Label("Line thickness slider");
-        Label ParametresCaption = new Label("Setup parametres");
+        // Bottom pane
+        HBox bottom = new HBox(10);
+        bottom.setPadding(new Insets(5));
 
-        HBox layout1 = new HBox(120);
-        layout1.setPadding(new Insets(height-165, 20,20,450));
-        layout1.getChildren().addAll(SliderCaption, ParametresCaption);
+        // Image tools
+        VBox vboxImage = new VBox(10);
+        vboxImage.setPadding(new Insets(5));
+        vboxImage.setStyle("-fx-border-color: silver");
+        HBox hboxImage1 = new HBox(10);
+        HBox hboxImage2 = new HBox(10);
+        Button btnReadCamera = new Button("Read from camera");
+        btnReadCamera.setPrefWidth(120);
+        Button btnUploadImage = new Button("Upload the image");
+        btnUploadImage.setPrefWidth(120);
+        Button btnCalibration = new Button("Select calibration file");
+        btnCalibration.setPrefWidth(120);
+        CheckBox chkCalibration = new CheckBox("use the calibration");
+        hboxImage1.getChildren().addAll(btnReadCamera, btnUploadImage);
+        hboxImage2.getChildren().addAll(btnCalibration, chkCalibration);
+        vboxImage.getChildren().addAll(hboxImage1, hboxImage2);
 
-        //second horizontal line
-        TextField lenghtLine = new TextField("Enter the lenght of the line");
-        Button submit = new Button("Submit");
-        CheckBox selectLine = new CheckBox("Select line");
-        CheckBox selectPoint = new CheckBox("Select point");
-        Slider slider = new Slider();
-        slider.setMin(0);
-        slider.setMax(5);
-        slider.setShowTickLabels(true);
-        slider.setShowTickMarks(true);
-        slider.setMajorTickUnit(1);
+        // Canvas tools
+        HBox hboxCanvas = new HBox(10);
+        hboxCanvas.setPadding(new Insets(5));
+        hboxCanvas.setStyle("-fx-border-color: silver");
+        TextField txtLineLength = new TextField("Line length");
+        Button btnSubmitLineLength = new Button("Submit");
+        btnSubmitLineLength.setPrefWidth(90);
+        HBox hboxCanvasTop = new HBox(5);
+        hboxCanvasTop.getChildren().addAll(txtLineLength, btnSubmitLineLength);
+        Label lblLineThickness = new Label("Line thickness");
+        Slider sldLineThickness = new Slider();
+        sldLineThickness.setMin(0);
+        sldLineThickness.setMax(5);
+        sldLineThickness.setShowTickLabels(true);
+        sldLineThickness.setShowTickMarks(true);
+        sldLineThickness.setMajorTickUnit(1);
+        Label lblSliderValue = new Label(Double.toString(sldLineThickness.getValue()));
+        sldLineThickness.valueProperty().addListener((observable, oldValue, newValue) -> lblSliderValue.setText(String.format("%.2f", newValue)));
+        HBox hboxCanvasBottom = new HBox(5);
+        hboxCanvasBottom.getChildren().addAll(lblLineThickness, sldLineThickness, lblSliderValue);
+        VBox vboxCanvasLeft = new VBox(5);
+        vboxCanvasLeft.getChildren().addAll(hboxCanvasTop, hboxCanvasBottom);
+        ToggleGroup toggleGroup = new ToggleGroup();
+        RadioButton rdbSelectLine = new RadioButton("Select line");
+        rdbSelectLine.setToggleGroup(toggleGroup);
+        RadioButton rdbSelectPoint = new RadioButton("Select point");
+        rdbSelectPoint.setToggleGroup(toggleGroup);
+        VBox vboxCanvasRight = new VBox(5);
+        vboxCanvasRight.getChildren().addAll(rdbSelectLine, rdbSelectPoint);
+        hboxCanvas.getChildren().addAll(vboxCanvasLeft, vboxCanvasRight);
 
-        Label SliderValue = new Label(Double.toString(slider.getValue()));
-        slider.valueProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                SliderValue.setText(String.format("%.2f", newValue));
-            }
-        });
+        // Calculation tools
+        VBox vboxCalculation = new VBox(5);
+        vboxCalculation.setPadding(new Insets(5));
+        vboxCalculation.setStyle("-fx-border-color: silver");
+        Label lblParameters = new Label("Setup parameters");
+        TextField txtPar1 = new TextField();
+        txtPar1.setPrefWidth(30);
+        TextField txtPar2 = new TextField();
+        txtPar2.setPrefWidth(30);
+        TextField txtPar3 = new TextField();
+        txtPar3.setPrefWidth(30);
+        Button btnSubmitParameters = new Button("Submit");
+        HBox hboxCalculation1 = new HBox(5);
+        hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, txtPar2, txtPar3, btnSubmitParameters);
+        Button btnGenerateMinMax = new Button("Find MIN/MAX R");
+        btnGenerateMinMax.setPrefWidth(128);
+        Button btnGeneratePointCloud = new Button("Save data");
+        btnGeneratePointCloud.setPrefWidth(128);
+        HBox hboxCalculation2 = new HBox(5);
+        hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
+        vboxCalculation.getChildren().addAll(hboxCalculation1, hboxCalculation2);
 
-        HBox layout2 = new HBox(10);
-        layout2.setPadding(new Insets(height-160,20,20,20));
-        layout2.setLayoutY(25);
-        layout2.getChildren().addAll(lenghtLine,submit,selectLine,selectPoint,slider,SliderValue);
+        bottom.getChildren().addAll(
+                vboxImage,
+                hboxCanvas,
+                vboxCalculation
+                );
+        borderPane.setBottom(bottom);
 
-        //third horizontal from right side
-        TextField par1 = new TextField();
-        par1.setPrefWidth(30);
-        TextField par2 = new TextField();
-        par2.setPrefWidth(30);
-        TextField par3 = new TextField();
-        par3.setPrefWidth(30);
-        Button submitPar = new Button("Submit");
-        Button genMaxMIn = new Button("Generate global max/min R");
-        Button pointCloud = new Button("Create point cloud file");
-
-
-        HBox layout3 = new HBox(10);
-        layout3.setPadding(new Insets(height-160,20,20,width-700));
-        layout3.setLayoutY(25);
-        layout3.getChildren().addAll(par1,par2,par3, submitPar, genMaxMIn, pointCloud);
-
-
-
-
-        root.getChildren().addAll(menu, splitPane,layout1, layout2, layout3);
+        root.getChildren().add(borderPane);
     }
 
     public static void main(String[] args) {
