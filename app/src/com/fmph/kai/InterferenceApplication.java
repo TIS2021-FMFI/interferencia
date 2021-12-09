@@ -3,10 +3,10 @@ package com.fmph.kai;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Orientation;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -14,6 +14,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
@@ -33,8 +34,8 @@ import static org.opencv.videoio.Videoio.CAP_DSHOW;
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
-    private final double width = 1366;
-    private final double height = 768;
+    private final double width = 900;
+    private final double height = 800;
 
     private Group root;
     private Stage stage;
@@ -58,6 +59,11 @@ public class InterferenceApplication extends Application {
     }
 
     private void initializeGUI() {
+        // Border Pane
+        BorderPane borderPane = new BorderPane();
+        borderPane.setPrefWidth(width);
+        borderPane.setPrefHeight(height);
+
         // Menu Bar
         MenuBar menu = new MenuBar();
         Menu fileMenu = new Menu("File");
@@ -70,12 +76,11 @@ public class InterferenceApplication extends Application {
         fileMenu.getItems().addAll(openMenuItem, cameraCalibrationMenuItem, startCaptureMenuItem);
         editMenu.getItems().addAll(setLineSizeMenuItem, resetLineMenuItem);
         menu.getMenus().addAll(fileMenu, editMenu);
+        borderPane.setTop(menu);
 
-        // Split Pane
-        SplitPane splitPane = new SplitPane();
-        splitPane.setLayoutY(25);
-        splitPane.orientationProperty().setValue(Orientation.HORIZONTAL);
-        ImageCanvas imageCanvas = new ImageCanvas(2*width/3, height - 25);
+        // ImageCanvas
+        ImageCanvas imageCanvas = new ImageCanvas(width/2, height-200);
+        borderPane.setLeft(imageCanvas);
 
         // Graph
         NumberAxis xAxis = new NumberAxis();
@@ -83,9 +88,8 @@ public class InterferenceApplication extends Application {
         xAxis.setLabel("X");
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setMaxWidth(width/3);
-
-        splitPane.getItems().addAll(imageCanvas, lineChart);
+        lineChart.setMaxWidth(width/2);
+        borderPane.setRight(lineChart);
 
         // Actions
         openMenuItem.setOnAction(e -> {
@@ -121,7 +125,7 @@ public class InterferenceApplication extends Application {
             TextInputDialog tid = new TextInputDialog();
             tid.setHeaderText("Enter new line size:");
             tid.setOnHidden(event -> {
-                //lineSize = Double.parseDouble(tid.getEditor().getText());
+                // lineSize = Double.parseDouble(tid.getEditor().getText());
             });
             tid.show();
         });
@@ -209,7 +213,88 @@ public class InterferenceApplication extends Application {
             });
         });
 
-        root.getChildren().addAll(menu, splitPane);
+        // Bottom pane
+        HBox bottom = new HBox(10);
+        bottom.setPadding(new Insets(5));
+
+        // Image tools
+        VBox vboxImage = new VBox(10);
+        vboxImage.setPadding(new Insets(5));
+        vboxImage.setStyle("-fx-border-color: silver");
+        HBox hboxImage1 = new HBox(10);
+        HBox hboxImage2 = new HBox(10);
+        Button btnReadCamera = new Button("Read from camera");
+        btnReadCamera.setPrefWidth(120);
+        Button btnUploadImage = new Button("Upload the image");
+        btnUploadImage.setPrefWidth(120);
+        Button btnCalibration = new Button("Select calibration file");
+        btnCalibration.setPrefWidth(120);
+        CheckBox chkCalibration = new CheckBox("use the calibration");
+        hboxImage1.getChildren().addAll(btnReadCamera, btnUploadImage);
+        hboxImage2.getChildren().addAll(btnCalibration, chkCalibration);
+        vboxImage.getChildren().addAll(hboxImage1, hboxImage2);
+
+        // Canvas tools
+        HBox hboxCanvas = new HBox(10);
+        hboxCanvas.setPadding(new Insets(5));
+        hboxCanvas.setStyle("-fx-border-color: silver");
+        TextField txtLineLength = new TextField("Line length");
+        Button btnSubmitLineLength = new Button("Submit");
+        btnSubmitLineLength.setPrefWidth(90);
+        HBox hboxCanvasTop = new HBox(5);
+        hboxCanvasTop.getChildren().addAll(txtLineLength, btnSubmitLineLength);
+        Label lblLineThickness = new Label("Line thickness");
+        Slider sldLineThickness = new Slider();
+        sldLineThickness.setMin(0);
+        sldLineThickness.setMax(5);
+        sldLineThickness.setShowTickLabels(true);
+        sldLineThickness.setShowTickMarks(true);
+        sldLineThickness.setMajorTickUnit(1);
+        Label lblSliderValue = new Label(Double.toString(sldLineThickness.getValue()));
+        sldLineThickness.valueProperty().addListener((observable, oldValue, newValue) -> lblSliderValue.setText(String.format("%.2f", newValue)));
+        HBox hboxCanvasBottom = new HBox(5);
+        hboxCanvasBottom.getChildren().addAll(lblLineThickness, sldLineThickness, lblSliderValue);
+        VBox vboxCanvasLeft = new VBox(5);
+        vboxCanvasLeft.getChildren().addAll(hboxCanvasTop, hboxCanvasBottom);
+        ToggleGroup toggleGroup = new ToggleGroup();
+        RadioButton rdbSelectLine = new RadioButton("Select line");
+        rdbSelectLine.setToggleGroup(toggleGroup);
+        RadioButton rdbSelectPoint = new RadioButton("Select point");
+        rdbSelectPoint.setToggleGroup(toggleGroup);
+        VBox vboxCanvasRight = new VBox(5);
+        vboxCanvasRight.getChildren().addAll(rdbSelectLine, rdbSelectPoint);
+        hboxCanvas.getChildren().addAll(vboxCanvasLeft, vboxCanvasRight);
+
+        // Calculation tools
+        VBox vboxCalculation = new VBox(5);
+        vboxCalculation.setPadding(new Insets(5));
+        vboxCalculation.setStyle("-fx-border-color: silver");
+        Label lblParameters = new Label("Setup parameters");
+        TextField txtPar1 = new TextField();
+        txtPar1.setPrefWidth(30);
+        TextField txtPar2 = new TextField();
+        txtPar2.setPrefWidth(30);
+        TextField txtPar3 = new TextField();
+        txtPar3.setPrefWidth(30);
+        Button btnSubmitParameters = new Button("Submit");
+        HBox hboxCalculation1 = new HBox(5);
+        hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, txtPar2, txtPar3, btnSubmitParameters);
+        Button btnGenerateMinMax = new Button("Find MIN/MAX R");
+        btnGenerateMinMax.setPrefWidth(128);
+        Button btnGeneratePointCloud = new Button("Save data");
+        btnGeneratePointCloud.setPrefWidth(128);
+        HBox hboxCalculation2 = new HBox(5);
+        hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
+        vboxCalculation.getChildren().addAll(hboxCalculation1, hboxCalculation2);
+
+        bottom.getChildren().addAll(
+                vboxImage,
+                hboxCanvas,
+                vboxCalculation
+                );
+        borderPane.setBottom(bottom);
+
+        root.getChildren().add(borderPane);
     }
 
     private Image grabFrame() {
