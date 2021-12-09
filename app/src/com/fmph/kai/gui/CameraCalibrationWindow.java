@@ -1,4 +1,4 @@
-package com.fmph.kai;
+package com.fmph.kai.gui;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
