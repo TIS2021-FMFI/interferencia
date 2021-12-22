@@ -3,6 +3,7 @@ package com.fmph.kai;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
+import com.fmph.kai.gui.ToggleSwitch;
 import com.fmph.kai.util.ExceptionHandler;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -180,14 +181,15 @@ public class InterferenceApplication extends Application {
         vboxImage.setStyle("-fx-border-color: silver");
         HBox hboxImage1 = new HBox(10);
         HBox hboxImage2 = new HBox(10);
-        Button btnReadCamera = new Button("Read from camera");
-        btnReadCamera.setPrefWidth(120);
         Button btnUploadImage = new Button("Upload the image");
         btnUploadImage.setPrefWidth(120);
+        Label lblCapture = new Label("Capture");
+        ToggleSwitch tglCapture = new ToggleSwitch();
+        tglCapture.setPrefWidth(40);
         Button btnCalibration = new Button("Select calibration file");
         btnCalibration.setPrefWidth(120);
         CheckBox chkCalibration = new CheckBox("use the calibration");
-        hboxImage1.getChildren().addAll(btnReadCamera, btnUploadImage);
+        hboxImage1.getChildren().addAll(btnUploadImage, lblCapture, tglCapture);
         hboxImage2.getChildren().addAll(btnCalibration, chkCalibration);
         vboxImage.getChildren().addAll(hboxImage1, hboxImage2);
 
