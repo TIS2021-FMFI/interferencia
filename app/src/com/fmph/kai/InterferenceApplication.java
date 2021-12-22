@@ -15,6 +15,7 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -83,17 +84,7 @@ public class InterferenceApplication extends Application {
 
         // Actions
         openMenuItem.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Choose a picture");
-            fileChooser.setInitialDirectory(
-                    new File(System.getProperty("user.home"))
-            );
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("All Images", "*.*"),
-                    new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                    new FileChooser.ExtensionFilter("PNG", "*.png")
-            );
-            File file = fileChooser.showOpenDialog(stage);
+            File file = getImageFromFilesystem();
             if (file != null) {
                 imageCanvas.setImage(new Image(file.toURI().toString()));
             }
@@ -261,6 +252,20 @@ public class InterferenceApplication extends Application {
         borderPane.setBottom(bottom);
 
         root.getChildren().add(borderPane);
+    }
+
+    private File getImageFromFilesystem() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose a picture");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("All Images", "*.jpg", "*.png", "*.bmp"),
+                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+                new FileChooser.ExtensionFilter("PNG", "*.png")
+        );
+        return fileChooser.showOpenDialog(stage);
     }
 
     public static void main(String[] args) {
