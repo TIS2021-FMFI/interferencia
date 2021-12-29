@@ -1,11 +1,12 @@
 package com.fmph.kai;
 
+import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
+import com.fmph.kai.util.ExceptionHandler;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -14,22 +15,14 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.videoio.VideoCapture;
 
 import java.io.*;
 import java.util.Optional;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import static org.opencv.videoio.Videoio.CAP_DSHOW;
 
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
@@ -41,9 +34,7 @@ public class InterferenceApplication extends Application {
     private Stage stage;
     private Scene scene;
 
-    private final VideoCapture capture = new VideoCapture();
-    private ScheduledExecutorService timer;
-    boolean capturing = false;
+    private Capture capture;
 
     @Override
     public void start(Stage stage) {
@@ -93,17 +84,7 @@ public class InterferenceApplication extends Application {
 
         // Actions
         openMenuItem.setOnAction(e -> {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Choose a picture");
-            fileChooser.setInitialDirectory(
-                    new File(System.getProperty("user.home"))
-            );
-            fileChooser.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("All Images", "*.*"),
-                    new FileChooser.ExtensionFilter("JPG", "*.jpg"),
-                    new FileChooser.ExtensionFilter("PNG", "*.png")
-            );
-            File file = fileChooser.showOpenDialog(stage);
+            File file = getImageFromFilesystem();
             if (file != null) {
                 imageCanvas.setImage(new Image(file.toURI().toString()));
             }
@@ -135,82 +116,58 @@ public class InterferenceApplication extends Application {
         });
 
         cameraCalibrationMenuItem.setOnAction(e -> {
-            CameraCalibrationWindow cameraCalibrationWindow = new CameraCalibrationWindow(stage.getX() + 20, stage.getY() + 20, width - 40, height - 40);
-            cameraCalibrationWindow.show();
+            try {
+                CameraCalibrationWindow cameraCalibrationWindow = new CameraCalibrationWindow(stage.getX() + 20, stage.getY() + 20, width - 40, height - 40);
+                cameraCalibrationWindow.show();
+            } catch (Capture.CaptureException exception) {
+                ExceptionHandler.handle(exception);
+            }
         });
 
+        capture = new Capture();
         startCaptureMenuItem.setOnAction(e -> {
-            if (capturing) {
-                startCaptureMenuItem.setText("Start capture");
-                capturing = false;
-                timer.shutdown();
-                capture.release();
-                return;
-            }
-            ProcessBuilder processBuilder = new ProcessBuilder("python", "app/src/com/fmph/kai/camera_test.py");
-            ObservableList<Integer> cameraIndexes = FXCollections.observableArrayList();
             try {
-                Process p = processBuilder.start();
-
-                BufferedReader stdInput = new BufferedReader(new
-                        InputStreamReader(p.getInputStream()));
-
-                BufferedReader stdError = new BufferedReader(new
-                        InputStreamReader(p.getErrorStream()));
-
-                String s;
-                while ((s = stdInput.readLine()) != null) {
-                    cameraIndexes.add(Integer.parseInt(s));
-                }
-
-                while ((s = stdError.readLine()) != null) {
-                    // TODO: handle errors better
-                    System.out.println(s);
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-            Dialog<Integer> dialog = new Dialog<>();
-            dialog.setTitle("Choose camera");
-
-            ButtonType submitButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(submitButtonType, ButtonType.CANCEL);
-
-            ComboBox<Integer> cameraIndexComboBox = new ComboBox<>();
-            cameraIndexComboBox.setItems(cameraIndexes);
-            cameraIndexComboBox.setValue(0);
-
-            dialog.getDialogPane().setContent(cameraIndexComboBox);
-
-            Platform.runLater(cameraIndexComboBox::requestFocus);
-
-            dialog.setResultConverter(dialogButton -> {
-                if (dialogButton == submitButtonType) {
-                    return cameraIndexComboBox.getValue();
-                }
-                return null;
-            });
-
-            Optional<Integer> result = dialog.showAndWait();
-
-            result.ifPresent(cameraIndex -> {
-                if (!capture.open(cameraIndex + CAP_DSHOW)) {
-                    // TODO: need better exception handling
-                    System.out.println("Error opening camera!");
+                if (capture.isCapturing()) {
+                    startCaptureMenuItem.setText("Start capture");
+                    capture.stop();
                     return;
                 }
-                capturing = true;
-                startCaptureMenuItem.setText("Stop capture");
-                Runnable frameGrabber = () -> {
-                    Image imageToShow = grabFrame();
-                    Platform.runLater(() -> {
-                        if (capturing)
-                            imageCanvas.setImage(imageToShow);
-                    });
-                };
-                timer = Executors.newSingleThreadScheduledExecutor();
-                timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
-            });
+                ObservableList<Integer> cameraIndexes = Capture.getAvailableCameras();
+                Dialog<Integer> dialog = new Dialog<>();
+                dialog.setTitle("Choose camera");
+
+                ButtonType submitButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().addAll(submitButtonType, ButtonType.CANCEL);
+
+                ComboBox<Integer> cameraIndexComboBox = new ComboBox<>();
+                cameraIndexComboBox.setItems(cameraIndexes);
+                cameraIndexComboBox.setValue(0);
+
+                dialog.getDialogPane().setContent(cameraIndexComboBox);
+
+                Platform.runLater(cameraIndexComboBox::requestFocus);
+
+                dialog.setResultConverter(dialogButton -> {
+                    if (dialogButton == submitButtonType) {
+                        return cameraIndexComboBox.getValue();
+                    }
+                    return null;
+                });
+
+                Optional<Integer> result = dialog.showAndWait();
+
+                result.ifPresent(cameraIndex -> {
+                    try {
+                        capture.start(cameraIndex);
+                    } catch (Capture.CaptureException exception) {
+                        ExceptionHandler.handle(exception);
+                    }
+                    startCaptureMenuItem.setText("Stop capture");
+                    capture.setOnFrameReceived(frame -> imageCanvas.setImage(Capture.Mat2Image(frame)));
+                });
+            } catch (Capture.CaptureException exception) {
+                ExceptionHandler.handle(exception);
+            }
         });
 
         // Bottom pane
@@ -297,15 +254,18 @@ public class InterferenceApplication extends Application {
         root.getChildren().add(borderPane);
     }
 
-    private Image grabFrame() {
-        if (capture.isOpened()) {
-            Mat frame = new Mat();
-            capture.read(frame);
-            MatOfByte buffer = new MatOfByte();
-            Imgcodecs.imencode(".png", frame, buffer);
-            return new Image(new ByteArrayInputStream(buffer.toArray()));
-        }
-        return null;
+    private File getImageFromFilesystem() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose a picture");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("All Images", "*.jpg", "*.png", "*.bmp"),
+                new FileChooser.ExtensionFilter("JPG", "*.jpg"),
+                new FileChooser.ExtensionFilter("PNG", "*.png")
+        );
+        return fileChooser.showOpenDialog(stage);
     }
 
     public static void main(String[] args) {
