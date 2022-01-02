@@ -3,11 +3,13 @@ package com.fmph.kai;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
+import com.fmph.kai.gui.Line;
 import com.fmph.kai.util.ExceptionHandler;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -17,10 +19,14 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
 
+import javax.imageio.ImageIO;
+import javax.xml.crypto.Data;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Optional;
 
@@ -28,7 +34,7 @@ public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
     private final double width = 900;
-    private final double height = 800;
+    private final double height = 600;
 
     private Group root;
     private Stage stage;
@@ -45,8 +51,10 @@ public class InterferenceApplication extends Application {
         scene = new Scene(root, width, height);
         initializeGUI();
         stage.setTitle("Interference analyzer");
+
         stage.setScene(scene);
         stage.show();
+
     }
 
     private void initializeGUI() {
@@ -80,7 +88,17 @@ public class InterferenceApplication extends Application {
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setMaxWidth(width/2);
-        borderPane.setRight(lineChart);
+        lineChart.setMaxHeight(height/2);
+        VBox vboxGrafOutput = new VBox(10);
+        vboxGrafOutput.getChildren().add(lineChart);
+
+        //ouput box
+        final TextArea textArea = TextAreaBuilder.create()
+                .prefWidth(300)
+                .wrapText(true)
+                .build();
+        vboxGrafOutput.getChildren().add(textArea);
+        borderPane.setRight(vboxGrafOutput);
 
         // Actions
         openMenuItem.setOnAction(e -> {
