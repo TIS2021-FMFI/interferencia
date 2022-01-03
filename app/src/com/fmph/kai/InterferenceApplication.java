@@ -3,13 +3,11 @@ package com.fmph.kai;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
-import com.fmph.kai.gui.Line;
 import com.fmph.kai.util.ExceptionHandler;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -17,18 +15,15 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
 
-import javax.imageio.ImageIO;
-import javax.xml.crypto.Data;
-import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
@@ -111,6 +106,18 @@ public class InterferenceApplication extends Application {
 
         imageCanvas.setOnMouseClicked(e -> {
             if (imageCanvas.click(e.getX(), e.getY())) {
+                // Ask for number of maximums
+                TextInputDialog tid = new TextInputDialog();
+                tid.setHeaderText("Enter the number of maximums to be analyzed:");
+                Integer numMaximums = null; // <- use this value for the calculations
+                Optional<String> stringMaximums = tid.showAndWait();
+                try {
+                    numMaximums = Integer.parseInt(stringMaximums.get());
+                } catch (NumberFormatException | NoSuchElementException exception) {
+                    ExceptionHandler.handle(exception);
+                }
+
+                // Redraw the graph
                 lineChart.getData().clear();
                 XYChart.Series<Number, Number> series = new XYChart.Series<>();
                 series.setName("Sinusoid");
