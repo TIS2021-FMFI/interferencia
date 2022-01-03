@@ -92,12 +92,13 @@ public class InterferenceApplication extends Application {
         VBox vboxGrafOutput = new VBox(10);
         vboxGrafOutput.getChildren().add(lineChart);
 
-        //ouput box
+        // Output box
         final TextArea textArea = TextAreaBuilder.create()
                 .prefWidth(300)
                 .wrapText(true)
                 .build();
         vboxGrafOutput.getChildren().add(textArea);
+        textArea.setEditable(false);
         borderPane.setRight(vboxGrafOutput);
 
         // Actions
