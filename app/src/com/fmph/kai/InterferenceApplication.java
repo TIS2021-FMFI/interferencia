@@ -15,20 +15,21 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
 
 import java.io.*;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
     private final double width = 900;
-    private final double height = 800;
+    private final double height = 600;
 
     private Group root;
     private Stage stage;
@@ -45,8 +46,10 @@ public class InterferenceApplication extends Application {
         scene = new Scene(root, width, height);
         initializeGUI();
         stage.setTitle("Interference analyzer");
+
         stage.setScene(scene);
         stage.show();
+
     }
 
     private void initializeGUI() {
@@ -80,7 +83,18 @@ public class InterferenceApplication extends Application {
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setMaxWidth(width/2);
-        borderPane.setRight(lineChart);
+        lineChart.setMaxHeight(height/2);
+        VBox vboxGrafOutput = new VBox(10);
+        vboxGrafOutput.getChildren().add(lineChart);
+
+        // Output box
+        final TextArea textArea = TextAreaBuilder.create()
+                .prefWidth(300)
+                .wrapText(true)
+                .build();
+        vboxGrafOutput.getChildren().add(textArea);
+        textArea.setEditable(false);
+        borderPane.setRight(vboxGrafOutput);
 
         // Actions
         openMenuItem.setOnAction(e -> {
@@ -92,6 +106,18 @@ public class InterferenceApplication extends Application {
 
         imageCanvas.setOnMouseClicked(e -> {
             if (imageCanvas.click(e.getX(), e.getY())) {
+                // Ask for number of maximums
+                TextInputDialog tid = new TextInputDialog();
+                tid.setHeaderText("Enter the number of maximums to be analyzed:");
+                Integer numMaximums = null; // <- use this value for the calculations
+                Optional<String> stringMaximums = tid.showAndWait();
+                try {
+                    numMaximums = Integer.parseInt(stringMaximums.get());
+                } catch (NumberFormatException | NoSuchElementException exception) {
+                    ExceptionHandler.handle(exception);
+                }
+
+                // Redraw the graph
                 lineChart.getData().clear();
                 XYChart.Series<Number, Number> series = new XYChart.Series<>();
                 series.setName("Sinusoid");
