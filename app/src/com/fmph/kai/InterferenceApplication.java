@@ -72,10 +72,6 @@ public class InterferenceApplication extends Application {
         menu.getMenus().addAll(fileMenu, editMenu);
         borderPane.setTop(menu);
 
-        // ImageCanvas
-        ImageCanvas imageCanvas = new ImageCanvas(width/2, height-200);
-        borderPane.setLeft(imageCanvas);
-
         // Graph
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
@@ -95,106 +91,6 @@ public class InterferenceApplication extends Application {
         vboxGrafOutput.getChildren().add(textArea);
         textArea.setEditable(false);
         borderPane.setRight(vboxGrafOutput);
-
-        // Actions
-        openMenuItem.setOnAction(e -> {
-            File file = getImageFromFilesystem();
-            if (file != null) {
-                imageCanvas.setImage(new Image(file.toURI().toString()));
-            }
-        });
-
-        imageCanvas.setOnMouseClicked(e -> {
-            if (imageCanvas.click(e.getX(), e.getY())) {
-                // Ask for number of maximums
-                TextInputDialog tid = new TextInputDialog();
-                tid.setHeaderText("Enter the number of maximums to be analyzed:");
-                Integer numMaximums = null; // <- use this value for the calculations
-                Optional<String> stringMaximums = tid.showAndWait();
-                try {
-                    numMaximums = Integer.parseInt(stringMaximums.get());
-                } catch (NumberFormatException | NoSuchElementException exception) {
-                    ExceptionHandler.handle(exception);
-                }
-
-                // Redraw the graph
-                lineChart.getData().clear();
-                XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                series.setName("Sinusoid");
-                for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
-                    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
-                }
-                lineChart.getData().add(series);
-            }
-        });
-
-        setLineSizeMenuItem.setOnAction(e -> {
-            TextInputDialog tid = new TextInputDialog();
-            tid.setHeaderText("Enter new line size:");
-            tid.setOnHidden(event -> {
-                // lineSize = Double.parseDouble(tid.getEditor().getText());
-            });
-            tid.show();
-        });
-
-        resetLineMenuItem.setOnAction(e -> {
-            imageCanvas.resetLine();
-        });
-
-        cameraCalibrationMenuItem.setOnAction(e -> {
-            try {
-                CameraCalibrationWindow cameraCalibrationWindow = new CameraCalibrationWindow(stage.getX() + 20, stage.getY() + 20, width - 40, height - 40);
-                cameraCalibrationWindow.show();
-            } catch (Capture.CaptureException exception) {
-                ExceptionHandler.handle(exception);
-            }
-        });
-
-        capture = new Capture();
-        startCaptureMenuItem.setOnAction(e -> {
-            try {
-                if (capture.isCapturing()) {
-                    startCaptureMenuItem.setText("Start capture");
-                    capture.stop();
-                    return;
-                }
-                ObservableList<Integer> cameraIndexes = Capture.getAvailableCameras();
-                Dialog<Integer> dialog = new Dialog<>();
-                dialog.setTitle("Choose camera");
-
-                ButtonType submitButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-                dialog.getDialogPane().getButtonTypes().addAll(submitButtonType, ButtonType.CANCEL);
-
-                ComboBox<Integer> cameraIndexComboBox = new ComboBox<>();
-                cameraIndexComboBox.setItems(cameraIndexes);
-                cameraIndexComboBox.setValue(0);
-
-                dialog.getDialogPane().setContent(cameraIndexComboBox);
-
-                Platform.runLater(cameraIndexComboBox::requestFocus);
-
-                dialog.setResultConverter(dialogButton -> {
-                    if (dialogButton == submitButtonType) {
-                        return cameraIndexComboBox.getValue();
-                    }
-                    return null;
-                });
-
-                Optional<Integer> result = dialog.showAndWait();
-
-                result.ifPresent(cameraIndex -> {
-                    try {
-                        capture.start(cameraIndex);
-                    } catch (Capture.CaptureException exception) {
-                        ExceptionHandler.handle(exception);
-                    }
-                    startCaptureMenuItem.setText("Stop capture");
-                    capture.setOnFrameReceived(frame -> imageCanvas.setImage(Capture.Mat2Image(frame)));
-                });
-            } catch (Capture.CaptureException exception) {
-                ExceptionHandler.handle(exception);
-            }
-        });
 
         // Bottom pane
         HBox bottom = new HBox(10);
@@ -276,6 +172,116 @@ public class InterferenceApplication extends Application {
                 vboxCalculation
                 );
         borderPane.setBottom(bottom);
+
+        // ImageCanvas
+        ImageCanvas imageCanvas = new ImageCanvas(width/2, height);
+        imageCanvas.heightProperty().bind(vboxGrafOutput.heightProperty());
+        imageCanvas.reset();
+        borderPane.setLeft(imageCanvas);
+
+        // Actions
+        openMenuItem.setOnAction(e -> {
+            File file = getImageFromFilesystem();
+            if (file != null) {
+                imageCanvas.setImage(new Image(file.toURI().toString()));
+            }
+        });
+
+        imageCanvas.setOnMouseClicked(e -> {
+            if (imageCanvas.click(e.getX(), e.getY())) {
+                // Ask for number of maximums
+                TextInputDialog tid = new TextInputDialog();
+                tid.setHeaderText("Enter the number of maximums to be analyzed:");
+                Integer numMaximums = null; // <- use this value for the calculations
+                Optional<String> stringMaximums = tid.showAndWait();
+                try {
+                    numMaximums = Integer.parseInt(stringMaximums.get());
+                } catch (NumberFormatException | NoSuchElementException exception) {
+                    ExceptionHandler.handle(exception);
+                }
+
+                // Redraw the graph
+                lineChart.getData().clear();
+                XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                series.setName("Sinusoid");
+                for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
+                    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
+                }
+                lineChart.getData().add(series);
+            }
+        });
+
+        imageCanvas.setOnScroll(e -> {
+            imageCanvas.zoom(e.getDeltaY(), e.getX(), e.getY());
+        });
+
+        setLineSizeMenuItem.setOnAction(e -> {
+            TextInputDialog tid = new TextInputDialog();
+            tid.setHeaderText("Enter new line size:");
+            tid.setOnHidden(event -> {
+                // lineSize = Double.parseDouble(tid.getEditor().getText());
+            });
+            tid.show();
+        });
+
+        resetLineMenuItem.setOnAction(e -> {
+            imageCanvas.resetLine();
+        });
+
+        cameraCalibrationMenuItem.setOnAction(e -> {
+            try {
+                CameraCalibrationWindow cameraCalibrationWindow = new CameraCalibrationWindow(stage.getX() + 20, stage.getY() + 20, width - 40, height - 40);
+                cameraCalibrationWindow.show();
+            } catch (Capture.CaptureException exception) {
+                ExceptionHandler.handle(exception);
+            }
+        });
+
+        capture = new Capture();
+        startCaptureMenuItem.setOnAction(e -> {
+            try {
+                if (capture.isCapturing()) {
+                    startCaptureMenuItem.setText("Start capture");
+                    capture.stop();
+                    return;
+                }
+                ObservableList<Integer> cameraIndexes = Capture.getAvailableCameras();
+                Dialog<Integer> dialog = new Dialog<>();
+                dialog.setTitle("Choose camera");
+
+                ButtonType submitButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().addAll(submitButtonType, ButtonType.CANCEL);
+
+                ComboBox<Integer> cameraIndexComboBox = new ComboBox<>();
+                cameraIndexComboBox.setItems(cameraIndexes);
+                cameraIndexComboBox.setValue(0);
+
+                dialog.getDialogPane().setContent(cameraIndexComboBox);
+
+                Platform.runLater(cameraIndexComboBox::requestFocus);
+
+                dialog.setResultConverter(dialogButton -> {
+                    if (dialogButton == submitButtonType) {
+                        return cameraIndexComboBox.getValue();
+                    }
+                    return null;
+                });
+
+                Optional<Integer> result = dialog.showAndWait();
+
+                result.ifPresent(cameraIndex -> {
+                    try {
+                        capture.start(cameraIndex);
+                    } catch (Capture.CaptureException exception) {
+                        ExceptionHandler.handle(exception);
+                    }
+                    startCaptureMenuItem.setText("Stop capture");
+                    capture.setOnFrameReceived(frame -> imageCanvas.setImage(Capture.Mat2Image(frame)));
+                });
+            } catch (Capture.CaptureException exception) {
+                ExceptionHandler.handle(exception);
+            }
+        });
 
         root.getChildren().add(borderPane);
     }
