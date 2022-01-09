@@ -77,24 +77,26 @@ public class InterferenceApplication extends Application {
         borderPane.setLeft(imageCanvas);
 
         // Graph
+        int padding = 10;
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("X");
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setMaxWidth(width/2);
+        lineChart.setMaxWidth(width/2 - 2*padding);
         lineChart.setMaxHeight(height/2);
-        VBox vboxGrafOutput = new VBox(10);
-        vboxGrafOutput.getChildren().add(lineChart);
+        VBox vboxGraphOutput = new VBox(padding);
+        vboxGraphOutput.setPadding(new Insets(padding));
+        vboxGraphOutput.getChildren().add(lineChart);
 
         // Output box
         final TextArea textArea = TextAreaBuilder.create()
-                .prefWidth(300)
+                .prefWidth(width/2 - 2*padding)
                 .wrapText(true)
+                .editable(false)
                 .build();
-        vboxGrafOutput.getChildren().add(textArea);
-        textArea.setEditable(false);
-        borderPane.setRight(vboxGrafOutput);
+        vboxGraphOutput.getChildren().add(textArea);
+        borderPane.setRight(vboxGraphOutput);
 
         // Actions
         openMenuItem.setOnAction(e -> {
