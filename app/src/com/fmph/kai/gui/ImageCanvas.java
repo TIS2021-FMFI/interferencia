@@ -14,6 +14,10 @@ public class ImageCanvas extends Canvas {
         setHeight(height);
     }
 
+    public Line getLine() {
+        return line;
+    }
+
     private void reset() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.setFill(Color.LIGHTGRAY);

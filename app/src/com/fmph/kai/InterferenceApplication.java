@@ -3,6 +3,7 @@ package com.fmph.kai;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
+import com.fmph.kai.gui.Line;
 import com.fmph.kai.gui.ToggleSwitch;
 import com.fmph.kai.util.ExceptionHandler;
 import javafx.application.Application;
@@ -21,6 +22,8 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -120,12 +123,36 @@ public class InterferenceApplication extends Application {
                     ExceptionHandler.handle(exception);
                 }
 
+                Line line = imageCanvas.getLine();
+                double x = line.getX0();
+                double y = line.getY0();
+                double dx = (line.getX1() - x) / (Math.abs(line.getX1() - x) );
+                double dy = (line.getY1() - y) / (Math.abs(line.getY1() - y) );
+                int i = 0;
+                while(x != line.getX1() && y!= line.getY1()){
+                    i++;
+                    System.out.println("X0 je " +  line.getX0());
+                    System.out.println("X1 je  "+ line.getX1());
+                    try {
+                        BufferedImage bi = ImageIO.read(new File(getImageFromFilesystem().getAbsolutePath()));
+                        //Color color = new Color(bi.getRGB((int)x, (int)y));
+                        //Data data  = new Data(i, (color.getBlue() + color.getGreen() + color.getRed())/3);
+
+                        x += dx;
+                        y += dy;
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+
+
+                }
+
                 // Redraw the graph
                 lineChart.getData().clear();
                 XYChart.Series<Number, Number> series = new XYChart.Series<>();
                 series.setName("Sinusoid");
-                for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
-                    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
+                for (double X = 0; X < 5*Math.PI; X += Math.PI/24) {
+                    series.getData().add(new XYChart.Data<>(X, Math.sin(X)));
                 }
                 lineChart.getData().add(series);
             }
