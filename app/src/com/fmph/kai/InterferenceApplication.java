@@ -3,8 +3,9 @@ package com.fmph.kai;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
-import com.fmph.kai.gui.ToggleSwitch;
+import com.fmph.kai.util.Compute;
 import com.fmph.kai.util.ExceptionHandler;
+import com.fmph.kai.util.MPoint;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.application.Platform;
@@ -21,10 +22,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
 
+
 import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
@@ -78,26 +79,24 @@ public class InterferenceApplication extends Application {
         borderPane.setLeft(imageCanvas);
 
         // Graph
-        int padding = 10;
         NumberAxis xAxis = new NumberAxis();
         NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("X");
         yAxis.setLabel("Y");
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setMaxWidth(width/2 - 2*padding);
+        lineChart.setMaxWidth(width/2);
         lineChart.setMaxHeight(height/2);
-        VBox vboxGraphOutput = new VBox(padding);
-        vboxGraphOutput.setPadding(new Insets(padding));
-        vboxGraphOutput.getChildren().add(lineChart);
+        VBox vboxGrafOutput = new VBox(10);
+        vboxGrafOutput.getChildren().add(lineChart);
 
         // Output box
         final TextArea textArea = TextAreaBuilder.create()
-                .prefWidth(width/2 - 2*padding)
+                .prefWidth(300)
                 .wrapText(true)
-                .editable(false)
                 .build();
-        vboxGraphOutput.getChildren().add(textArea);
-        borderPane.setRight(vboxGraphOutput);
+        vboxGrafOutput.getChildren().add(textArea);
+        textArea.setEditable(false);
+        borderPane.setRight(vboxGrafOutput);
 
         // Actions
         openMenuItem.setOnAction(e -> {
@@ -106,6 +105,7 @@ public class InterferenceApplication extends Application {
                 imageCanvas.setImage(new Image(file.toURI().toString()));
             }
         });
+
 
         imageCanvas.setOnMouseClicked(e -> {
             if (imageCanvas.click(e.getX(), e.getY())) {
@@ -120,14 +120,33 @@ public class InterferenceApplication extends Application {
                     ExceptionHandler.handle(exception);
                 }
 
+                System.out.println("XXXXXXXXXXXXXXXXXXXXX");
+
+                Compute.colorize(imageCanvas.getImage());
+                Compute.printPointList();
+                Compute.analyze();
+                Compute.printPointList();
+                Compute.printMaxList();
+
                 // Redraw the graph
                 lineChart.getData().clear();
                 XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                series.setName("Sinusoid");
-                for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
-                    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
+                series.setName("Interference");
+                for (MPoint p : Compute.pointlist) {
+                    series.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
+                    //System.out.println(p.x+" "+p.y);
                 }
+                XYChart.Series<Number, Number> maxes = new XYChart.Series<>();
+                maxes.setName("Maxima");
+                for (MPoint p : Compute.maxlist) {
+                    maxes.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
+                    //System.out.println(p.x+" "+p.y);
+                }
+                //for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
+                //    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
+                //}
                 lineChart.getData().add(series);
+                lineChart.getData().add(maxes);
             }
         });
 
@@ -209,17 +228,86 @@ public class InterferenceApplication extends Application {
         vboxImage.setStyle("-fx-border-color: silver");
         HBox hboxImage1 = new HBox(10);
         HBox hboxImage2 = new HBox(10);
+        Button btnReadCamera = new Button("Read from camera");
+        btnReadCamera.setPrefWidth(120);
         Button btnUploadImage = new Button("Upload the image");
         btnUploadImage.setPrefWidth(120);
-        Label lblCapture = new Label("Capture");
-        ToggleSwitch tglCapture = new ToggleSwitch();
-        tglCapture.setPrefWidth(40);
         Button btnCalibration = new Button("Select calibration file");
         btnCalibration.setPrefWidth(120);
         CheckBox chkCalibration = new CheckBox("use the calibration");
-        hboxImage1.getChildren().addAll(btnUploadImage, lblCapture, tglCapture);
+        hboxImage1.getChildren().addAll(btnReadCamera, btnUploadImage);
         hboxImage2.getChildren().addAll(btnCalibration, chkCalibration);
         vboxImage.getChildren().addAll(hboxImage1, hboxImage2);
+
+        //Image tools buttons action
+        /*
+        Button b = new Button("BLAH");
+        b.setOnMouseClicked(e -> {
+
+        });
+
+         */
+
+        btnUploadImage.setOnAction(e -> {
+            File file = getImageFromFilesystem();
+            System.out.println("btn clicked");
+            if (file != null) {
+                imageCanvas.setImage(new Image(file.toURI().toString()));
+            }
+        });
+
+        btnCalibration.setOnAction(e -> {
+            File file = getImageFromFilesystem();
+            if (file != null) {
+                //do smth with calibration file, idk what
+            }
+        });
+
+        capture = new Capture();
+        btnReadCamera.setOnAction(e -> {
+            try {
+                if (capture.isCapturing()) {
+                    startCaptureMenuItem.setText("Start capture");
+                    capture.stop();
+                    return;
+                }
+                ObservableList<Integer> cameraIndexes = Capture.getAvailableCameras();
+                Dialog<Integer> dialog = new Dialog<>();
+                dialog.setTitle("Choose camera");
+
+                ButtonType submitButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
+                dialog.getDialogPane().getButtonTypes().addAll(submitButtonType, ButtonType.CANCEL);
+
+                ComboBox<Integer> cameraIndexComboBox = new ComboBox<>();
+                cameraIndexComboBox.setItems(cameraIndexes);
+                cameraIndexComboBox.setValue(0);
+
+                dialog.getDialogPane().setContent(cameraIndexComboBox);
+
+                Platform.runLater(cameraIndexComboBox::requestFocus);
+
+                dialog.setResultConverter(dialogButton -> {
+                    if (dialogButton == submitButtonType) {
+                        return cameraIndexComboBox.getValue();
+                    }
+                    return null;
+                });
+
+                Optional<Integer> result = dialog.showAndWait();
+
+                result.ifPresent(cameraIndex -> {
+                    try {
+                        capture.start(cameraIndex);
+                    } catch (Capture.CaptureException exception) {
+                        ExceptionHandler.handle(exception);
+                    }
+                    startCaptureMenuItem.setText("Stop capture");
+                    capture.setOnFrameReceived(frame -> imageCanvas.setImage(Capture.Mat2Image(frame)));
+                });
+            } catch (Capture.CaptureException exception) {
+                ExceptionHandler.handle(exception);
+            }
+        });
 
         // Canvas tools
         HBox hboxCanvas = new HBox(10);
@@ -284,6 +372,8 @@ public class InterferenceApplication extends Application {
         root.getChildren().add(borderPane);
     }
 
+
+
     private File getImageFromFilesystem() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose a picture");
@@ -297,6 +387,8 @@ public class InterferenceApplication extends Application {
         );
         return fileChooser.showOpenDialog(stage);
     }
+
+    //btnSubmitParameters.
 
     public static void main(String[] args) {
         launch();
