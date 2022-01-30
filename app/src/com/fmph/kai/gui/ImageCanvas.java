@@ -66,7 +66,7 @@ public class ImageCanvas extends Canvas {
         if (d < 0 && imageWidth - getWidth() < 0.1) return;
         imageWidth += d;
         left -= d*x/getWidth();
-        top -= d*y/(imageWidth*aspectRatio);
+        top -= d*y/getWidth();
         reset();
     }
 }
