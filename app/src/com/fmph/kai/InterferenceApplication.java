@@ -4,6 +4,7 @@ import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
 import com.fmph.kai.util.ExceptionHandler;
+import com.fmph.kai.util.Vector2D;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.application.Platform;
@@ -15,6 +16,8 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -188,7 +191,7 @@ public class InterferenceApplication extends Application {
         });
 
         imageCanvas.setOnMouseClicked(e -> {
-            if (imageCanvas.click(e.getX(), e.getY())) {
+            if (e.getButton() == MouseButton.PRIMARY && imageCanvas.leftClick(e.getX(), e.getY())) {
                 // Ask for number of maximums
                 TextInputDialog tid = new TextInputDialog();
                 tid.setHeaderText("Enter the number of maximums to be analyzed:");
@@ -211,8 +214,26 @@ public class InterferenceApplication extends Application {
             }
         });
 
+        imageCanvas.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
+            if (e.getButton() == MouseButton.SECONDARY) {
+                imageCanvas.rightPressed(new Vector2D(e.getX(), e.getY()));
+            }
+        });
+
+        imageCanvas.addEventHandler(MouseEvent.MOUSE_DRAGGED, e -> {
+            if (e.getButton() == MouseButton.SECONDARY) {
+                imageCanvas.rightDragged(new Vector2D(e.getX(), e.getY()));
+            }
+        });
+
+        imageCanvas.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
+            if (e.getButton() == MouseButton.SECONDARY) {
+                imageCanvas.rightReleased(new Vector2D(e.getX(), e.getY()));
+            }
+        });
+
         imageCanvas.setOnScroll(e -> {
-            imageCanvas.zoom(e.getDeltaY(), e.getX(), e.getY());
+            imageCanvas.zoom(e.getDeltaY(), new Vector2D(e.getX(), e.getY()));
         });
 
         setLineSizeMenuItem.setOnAction(e -> {

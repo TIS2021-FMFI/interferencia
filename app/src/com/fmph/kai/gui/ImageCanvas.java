@@ -1,5 +1,6 @@
 package com.fmph.kai.gui;
 
+import com.fmph.kai.util.Vector2D;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -12,17 +13,17 @@ public class ImageCanvas extends Canvas {
     private Image image;
     private double imageWidth;
     private double aspectRatio;
-    private double left;
-    private double top;
+    private Vector2D imagePosition;
+    private Vector2D offset;
 
     public ImageCanvas(double width, double height) {
         setWidth(width);
         setHeight(height);
         imageWidth = width;
-        left = 0;
-        top = 0;
+        imagePosition = Vector2D.zero();
         line = null;
         image = null;
+        offset = null;
     }
 
     public void reset() {
@@ -30,7 +31,7 @@ public class ImageCanvas extends Canvas {
         gc.setFill(Color.LIGHTGRAY);
         gc.fillRect(0, 0, getWidth(), getHeight());
         if (image != null)
-            gc.drawImage(image, left, top, imageWidth, imageWidth*aspectRatio);
+            gc.drawImage(image, imagePosition.x, imagePosition.y, imageWidth, imageWidth*aspectRatio);
     }
 
     public void setImage(Image image) {
@@ -38,12 +39,27 @@ public class ImageCanvas extends Canvas {
         if (image != null)
             aspectRatio = image.getHeight()/image.getWidth();
         imageWidth = getWidth();
-        left = 0;
-        top = 0;
+        imagePosition = Vector2D.zero();
         reset();
     }
 
-    public boolean click(double x, double y) {
+    public void rightPressed(Vector2D mousePosition) {
+        this.offset = imagePosition.add(mousePosition.multiply(-1));
+    }
+
+    public void rightReleased(Vector2D mousePosition) {
+        imagePosition = mousePosition.add(offset);
+        reset();
+        offset = null;
+    }
+
+    public void rightDragged(Vector2D mousePosition) {
+        if (offset == null) return;
+        imagePosition = mousePosition.add(offset);
+        reset();
+    }
+
+    public boolean leftClick(double x, double y) {
         if (image == null) return false;
         if (line == null) {
             line = new Line(x, y, getGraphicsContext2D());
@@ -62,11 +78,10 @@ public class ImageCanvas extends Canvas {
         reset();
     }
 
-    public void zoom(double d, double x, double y) {
-        if (d < 0 && imageWidth - getWidth() < 0.1) return;
+    public void zoom(double d, Vector2D mousePosition) {
+        if (image == null || d < 0 && imageWidth - getWidth() < 0.1) return;
         imageWidth += d;
-        left -= d*x/getWidth();
-        top -= d*y/getWidth();
+        imagePosition = imagePosition.add(mousePosition.multiply(d).divide(getWidth()).multiply(-1));
         reset();
     }
 }
