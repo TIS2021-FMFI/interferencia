@@ -11,39 +11,50 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class Compute {
-    public int click = 0;
 
-    public static int maxMouseX = 0;
-    public static int maxMouseY = 0;
+    public int maxMouseX = 0;
+    public int maxMouseY = 0;
 
-    public static int clickLineX1 = 0;
-    public static int clickLineY1 = 0;
-    public static int clickLineX2 = 0;
-    public static int clickLineY2 = 0;
+    public int clickLineX1 = -1;
+    public int clickLineY1 = -1;
+    public int clickLineX2 = -1;
+    public int clickLineY2 = -1;
 
-    public static int clickLenX1 = 0;
-    public static int clickLenY1 = 0;
-    public static int clickLenX2 = 0;
-    public static int clickLenY2 = 0;
-    public static double lengthClickLen = 100;
-    public static double lengthLen = 5;
+    public int clickLenX1 = -1;
+    public int clickLenY1 = -1;
+    public int clickLenX2 = -1;
+    public int clickLenY2 = -1;
 
-    public static double chybicka = 0.05;
+    public double lengthClickLen = -1;
+    public double lengthLen = -1;
+    public int lineWidth = 1;
+    public int numMaxima = 2; // <- use this value for the calculations
 
-    public static ArrayList<MPoint> pointlist = new ArrayList<MPoint>();
+    public double ymin,ymax;
+    public double x1, y1, x2, y2;
+    public double x1Len, y1Len, x2Len, y2Len;
 
-    public static ArrayList<MPoint> maxlist = new ArrayList<MPoint>();
+    public double chybicka = 0.005;
 
+    public ArrayList<MPoint> pointlist = new ArrayList<MPoint>();
 
-    public static int getMaxNumber(){
+    public ArrayList<MPoint> maxlist = new ArrayList<MPoint>();
+
+    public Compute()
+    {
+
+    }
+
+    public int getMaxNumber(){
         return maxlist.size();
     }
 
-    public static MPoint getMax(int maxidx){
+
+    public MPoint getMax(int maxidx){
         return maxlist.get(maxidx);
     }
 
-    public static double getRealDistance(int maxidx1, int maxidx2){
+    public double getRealDistance(int maxidx1, int maxidx2){
         try{
             double res = 0.0;
             MPoint p1 = getMax(maxidx1);
@@ -58,35 +69,34 @@ public class Compute {
         }
     }
 
-    public static boolean analyze() {
-        lengthClickLen = Math.sqrt((double) (clickLenX1-clickLenX2)*(clickLenX1-clickLenX2) + (double) (clickLenY1-clickLenY2)*(clickLenY1-clickLenY2));
+    public boolean analyze() {
 
         //setup derivacii + vyhladenie malych zmien
-        for (int i=0; i<pointlist.size(); i++) {
-            if(i == 0){
+        for (int i = 0; i < pointlist.size(); i++) {
+            if (i == 0) {
                 pointlist.get(i).ldiff = 0;
             } else {
-                pointlist.get(i).ldiff = getlrdiff(pointlist.get(i-1).suc, pointlist.get(i).suc);
+                pointlist.get(i).ldiff = getlrdiff(pointlist.get(i - 1).suc, pointlist.get(i).suc);
             }
-            if(i == pointlist.size()-1){
+            if (i == pointlist.size() - 1) {
                 pointlist.get(i).rdiff = 0;
             } else {
-                pointlist.get(i).rdiff = getlrdiff(pointlist.get(i).suc, pointlist.get(i+1).suc);
+                pointlist.get(i).rdiff = getlrdiff(pointlist.get(i).suc, pointlist.get(i + 1).suc);
             }
         }
 
         MPoint lmax = null;
-        if(pointlist.get(0).rdiff == 0){
+        if (pointlist.get(0).rdiff == 0) {
             //initial bod moze byt lmax
             lmax = pointlist.get(0);
         }
-        for(MPoint p:pointlist){
-            if(p.ldiff > 0 && p.rdiff < 0){
+        for (MPoint p:pointlist) {
+            if (p.ldiff > 0 && p.rdiff < 0){
                 //ciste maximum
                 maxlist.add(p);
-            } else if(p.ldiff == 0 && p.rdiff < 0){
+            } else if (p.ldiff == 0 && p.rdiff < 0){
                 //konstanta a klesa
-                if(lmax != null){
+                if (lmax != null){
                     //maximum medzi lmax a p
                     int idx = (lmax.seq + p.seq)/2;  //zaokruhloanie, zoberie sa nejaky v strede
                     maxlist.add(pointlist.get(idx));
@@ -103,39 +113,85 @@ public class Compute {
         return true;
     }
 
-    private static int getlrdiff(double a, double b){
+    private int getlrdiff(double a, double b){
         //vrati 0 ak konstanta, 1 ak rastie a -1 ak klesa
-        if(Math.abs(a-b) < chybicka){
+        if (Math.abs(a - b) < chybicka) {
             return 0;
         }
-        if(a < b){
+        if (a < b) {
             return 1;
         }
         return -1;
     }
 
-    public static boolean colorize(Image image) {
+    private double color2intensity(Color c)
+    {
+        return c.getRed() + c.getGreen() + c.getBlue();
+    }
+
+    private void calculateIntensity(PixelReader pixelreader, MPoint p) {
+
+        double psum = 0.0;
+        double yp = p.y - (lineWidth - 1) / 2.0;
+        int counted = 0;
+        for (int ny = 0; ny < lineWidth; ny++) {
+            double xp = p.x - (lineWidth - 1) / 2.0;
+            for (int nx = 0; nx < lineWidth; nx++) {
+                int x = (int)(xp + 0.5);
+                int y = (int)(yp + 0.5);
+                if ((x - p.x) * (x - p.x) + (y - p.y) * (y - p.y) <= (lineWidth * lineWidth / 4.0)) {
+                    counted++;
+                    Color c = pixelreader.getColor(x, y);
+                    psum += color2intensity(c);
+                }
+                xp += 1.0;
+            }
+            yp += 1.0;
+        }
+
+        p.suc = psum / counted;
+    }
+
+    public double zoomFreeCoordinateX(double imageWidth, int x)
+    {
+        return (x * imageWidth)/(double)maxMouseX;
+    }
+
+    public double zoomFreeCoordinateY(double imageHeight, int y)
+    {
+        return (y * imageHeight)/(double)maxMouseY;
+    }
+
+    public boolean colorize(Image image) {
         PixelReader pixelreader = image.getPixelReader();
         int maxImageX = (int) image.getWidth();
         int maxImageY = (int) image.getHeight();
 
-        int x1 = (clickLineX1*(int) image.getWidth())/maxMouseX;
-        int y1 = (clickLineY1*(int) image.getHeight())/maxMouseY;
-        int x2 = (clickLineX2*(int) image.getWidth())/maxMouseX;
-        int y2 = (clickLineY2*(int) image.getHeight())/maxMouseY;
-        bresenham(x1, y1, x2, y2);
+        x1 = zoomFreeCoordinateX(maxImageX, clickLineX1);
+        y1 = zoomFreeCoordinateY(maxImageY, clickLineY1);
+        x2 = zoomFreeCoordinateX(maxImageX, clickLineX2);
+        y2 = zoomFreeCoordinateY(maxImageY, clickLineY2);
+
+        x1Len = zoomFreeCoordinateX(maxImageX, clickLenX1);
+        y1Len = zoomFreeCoordinateY(maxImageY, clickLenY1);
+        x2Len = zoomFreeCoordinateX(maxImageX, clickLenX2);
+        y2Len = zoomFreeCoordinateY(maxImageY, clickLenY2);
+
+        interpolate(x1, y1, x2, y2);
 
         try {
             int seq = 0;
-            for (MPoint p : Compute.pointlist) {
-                p.color = pixelreader.getColor(p.x, p.y);
-                p.r = p.color.getRed();
-                p.g = p.color.getGreen();
-                p.b = p.color.getBlue();
-                p.suc = p.r+p.g+p.b;
+            for (MPoint p : pointlist) {
+                calculateIntensity(pixelreader, p);
                 p.seq = seq;
                 seq = seq + 1;
-                System.out.println("farby "+p.x+" "+p.y+" "+p.r+" "+p.g+" "+p.b+" "+p.suc);
+                //System.out.println("farby "+p.x+" "+p.y+" "+p.r+" "+p.g+" "+p.b+" "+p.suc);
+                if (seq == 1)
+                {
+                    ymin = p.suc;
+                    ymax = p.suc;
+                }
+                else if (p.suc < ymin) ymin = p.suc; else if (p.suc > ymax) ymax = p.suc;
             }
             return true;
         } catch (Exception e){
@@ -144,53 +200,22 @@ public class Compute {
         }
     }
 
-    public static boolean bresenham(int x1, int y1, int x2, int y2) {
+    public void interpolate(double x1, double y1, double x2, double y2) {
         // delta of exact value and rounded value of the dependent variable
+        int numberOfSteps = (int)(0.5 + Math.sqrt((double) (x1-x2)*(x1-x2) + (double) (y1-y2)*(y1-y2)));
+
         pointlist.clear();
         maxlist.clear();
-        int d = 0;
 
-        int dx = Math.abs(x2 - x1);
-        int dy = Math.abs(y2 - y1);
-
-        int dx2 = 2 * dx; // slope scaling factors to
-        int dy2 = 2 * dy; // avoid floating point
-
-        int ix = x1 < x2 ? 1 : -1; // increment direction
-        int iy = y1 < y2 ? 1 : -1;
-
-        int x = x1;
-        int y = y1;
-
-        if (dx >= dy) {
-            while (true) {
-                pointlist.add(new MPoint(x, y));
-                if (x == x2)
-                    break;
-                x += ix;
-                d += dy2;
-                if (d > dx) {
-                    y += iy;
-                    d -= dx2;
-                }
-            }
-        } else {
-            while (true) {
-                pointlist.add(new MPoint(x, y));
-                if (y == y2)
-                    break;
-                y += iy;
-                d += dx2;
-                if (d > dy) {
-                    x += ix;
-                    d -= dy2;
-                }
-            }
+        for (int step = 0; step <= numberOfSteps; step++)
+        {
+            double x = x1 + step * (x2 - x1) / numberOfSteps;
+            double y = y1 + step * (y2 - y1) / numberOfSteps;
+            pointlist.add(new MPoint(x, y));
         }
-        return true;
     }
 
-    public static void printPointList(){
+    public void printPointList(){
         System.out.println("\nPRINT POINT LIST - START");
         for(MPoint p:pointlist){
             p.print();
@@ -198,7 +223,7 @@ public class Compute {
         System.out.println("PRINT POINT LIST - END\n");
     }
 
-    public static void printMaxList(){
+    public void printMaxList(){
         System.out.println("\nPRINT MAX LIST - START");
         for(MPoint p:maxlist){
             p.print();

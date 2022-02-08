@@ -9,8 +9,10 @@ import javafx.scene.paint.Color;
 public class ImageCanvas extends Canvas {
     private Line line = null;
     private Image image;
+    private Compute compute;
 
-    public ImageCanvas(double width, double height) {
+    public ImageCanvas(double width, double height, Compute compute) {
+        this.compute = compute;
         setWidth(width);
         setHeight(height);
     }
@@ -20,8 +22,8 @@ public class ImageCanvas extends Canvas {
         gc.setFill(Color.LIGHTGRAY);
         gc.fillRect(0, 0, getWidth(), getHeight());
         gc.drawImage(image, 0, 0, getWidth(), image.getHeight()*getWidth()/image.getWidth());
-        Compute.maxMouseX = (int) getWidth();
-        Compute.maxMouseY = (int) (image.getHeight()*getWidth()/image.getWidth());
+        compute.maxMouseX = (int) getWidth();
+        compute.maxMouseY = (int) (image.getHeight()*getWidth()/image.getWidth());
     }
 
     public void setImage(Image image) {
@@ -35,21 +37,38 @@ public class ImageCanvas extends Canvas {
 
     public boolean click(double x, double y) {
         if (image == null) return false;
-        if (line == null) {
-            line = new Line(x, y, getGraphicsContext2D());
-            System.out.println("prvy bod x:"+ x+ "y:"+ y);
-            Compute.clickLineX1 = (int)x;
-            Compute.clickLineY1 = (int)y;
-            return false;
+        if (compute.lengthLen < 0) {
+            System.out.println("prvy if klik"+compute.clickLenX1);
+            if (compute.clickLenX1 < 0) {
+                Line.pointX(x, y, getGraphicsContext2D());
+                compute.clickLenX1 = (int) x;
+                compute.clickLenY1 = (int) y;
+                System.out.println("klik 1");
+                return false;
+            } else {
+                Line.pointX(x, y, getGraphicsContext2D());
+                compute.clickLenX2 = (int) x;
+                compute.clickLenY2 = (int) y;
+                System.out.println("klik 2");
+                return true;
+            }
         } else {
-            reset();
-            line.setX1(x);
-            line.setY1(y);
-            line.draw();
-            System.out.println("druhy bod x:"+ x+ "y:"+ y);
-            Compute.clickLineX2 = (int)x;
-            Compute.clickLineY2 = (int)y;
-            return true;
+            if (line == null) {
+                line = new Line(x, y, getGraphicsContext2D());
+                System.out.println("prvy bod x:" + x + "y:" + y);
+                compute.clickLineX1 = (int) x;
+                compute.clickLineY1 = (int) y;
+                return false;
+            } else {
+                reset();
+                line.setX1(x);
+                line.setY1(y);
+                line.draw();
+                System.out.println("druhy bod x:" + x + "y:" + y);
+                compute.clickLineX2 = (int) x;
+                compute.clickLineY2 = (int) y;
+                return true;
+            }
         }
     }
 
