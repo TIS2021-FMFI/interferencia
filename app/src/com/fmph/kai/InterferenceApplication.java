@@ -58,6 +58,7 @@ public class InterferenceApplication extends Application {
         stage.setTitle("Interference analyzer");
 
         stage.setScene(scene);
+        stage.setScene(scene);
         stage.show();
 
     }
@@ -429,6 +430,14 @@ public class InterferenceApplication extends Application {
         hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
         vboxCalculation.getChildren().addAll(hboxCalculation1, hboxCalculation2);
 
+        btnSubmitParameters.setOnAction(e -> {
+            try {
+                compute.dHandler = Double.valueOf(txtPar1.getText());
+            } catch (NumberFormatException | NoSuchElementException exception) {
+                ExceptionHandler.handle(exception);
+            }
+        });
+
         bottom.getChildren().addAll(
                 vboxImage,
                 hboxCanvas,
@@ -438,13 +447,7 @@ public class InterferenceApplication extends Application {
 
         root.getChildren().add(borderPane);
 
-        btnCalibration.setOnAction(e -> {
-            try {
-                compute.dHandler = Double.valueOf(txtPar1.getText());
-            } catch (NumberFormatException | NoSuchElementException exception) {
-                ExceptionHandler.handle(exception);
-            }
-        });
+
 
 
 
