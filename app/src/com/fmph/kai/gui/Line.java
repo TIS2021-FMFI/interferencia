@@ -1,28 +1,21 @@
 package com.fmph.kai.gui;
 
+import com.fmph.kai.util.Vector2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
 public class Line {
-    private double x0, y0;
-    private double x1, y1;
+    private Vector2D start;
+    private Vector2D stop;
     private final GraphicsContext gc;
 
-    public void setX1(double x1) {
-        this.x1 = x1;
-    }
+    public void setStop(Vector2D stop) { this.stop = stop; }
 
-    public void setY1(double y1) {
-        this.y1 = y1;
-    }
-
-
-    public Line(double x0, double y0, GraphicsContext gc) {
-        this.x0 = x0;
-        this.y0 = y0;
+    public Line(Vector2D start, GraphicsContext gc) {
+        this.start = start;
         this.gc = gc;
         gc.setFill(Color.DARKBLUE);
-        gc.fillOval(x0-5, y0-5, 10, 10);
+        gc.fillOval(start.x-5, start.y-5, 10, 10);
     }
 
     public static void pointX(double px0, double py0, GraphicsContext gc) {
@@ -34,9 +27,9 @@ public class Line {
         System.out.println("kreslim ciaru");
         gc.setLineWidth(3);
         gc.setStroke(Color.RED);
-        gc.strokeLine(x0, y0, x1, y1);
+        gc.strokeLine(start.x, start.y, stop.x, stop.y);
         gc.setFill(Color.DARKBLUE);
-        gc.fillOval(x1-5, y1-5, 10, 10);
-        gc.fillOval(x0-5, y0-5, 10, 10);
+        gc.fillOval(stop.x-5, stop.y-5, 10, 10);
+        gc.fillOval(start.x-5, start.y-5, 10, 10);
     }
 }

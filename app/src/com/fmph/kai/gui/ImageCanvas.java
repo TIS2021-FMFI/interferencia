@@ -35,6 +35,8 @@ public class ImageCanvas extends Canvas {
             gc.drawImage(image, imagePosition.x, imagePosition.y, imageWidth, imageWidth * aspectRatio);
             compute.maxMouseX = (int) getWidth();
             compute.maxMouseY = (int) (image.getHeight() * getWidth() / image.getWidth());
+            if (line != null)
+                line.draw();
         }
     }
 
@@ -86,16 +88,14 @@ public class ImageCanvas extends Canvas {
             }
         } else {
             if (line == null) {
-                line = new Line(mousePosition.x, mousePosition.y, getGraphicsContext2D());
+                line = new Line(mousePosition, getGraphicsContext2D());
                 System.out.println("prvy bod x:" + mousePosition.x + "y:" + mousePosition.y);
                 compute.clickLineX1 = (int) mousePosition.x;
                 compute.clickLineY1 = (int) mousePosition.y;
                 return false;
             } else {
+                line.setStop(mousePosition);
                 reset();
-                line.setX1(mousePosition.x);
-                line.setY1(mousePosition.y);
-                line.draw();
                 System.out.println("druhy bod x:" + mousePosition.x + "y:" + mousePosition.y);
                 compute.clickLineX2 = (int) mousePosition.x;
                 compute.clickLineY2 = (int) mousePosition.y;
