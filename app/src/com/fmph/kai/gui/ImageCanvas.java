@@ -38,24 +38,20 @@ public class ImageCanvas extends Canvas {
     public boolean click(double x, double y) {
         if (image == null) return false;
         if (compute.lengthLen < 0) {
-            System.out.println("prvy if klik"+compute.clickLenX1);
             if (compute.clickLenX1 < 0) {
                 Line.pointX(x, y, getGraphicsContext2D());
                 compute.clickLenX1 = (int) x;
                 compute.clickLenY1 = (int) y;
-                System.out.println("klik 1");
                 return false;
             } else {
                 Line.pointX(x, y, getGraphicsContext2D());
                 compute.clickLenX2 = (int) x;
                 compute.clickLenY2 = (int) y;
-                System.out.println("klik 2");
                 return true;
             }
         } else {
             if (line == null) {
                 line = new Line(x, y, getGraphicsContext2D());
-                System.out.println("prvy bod x:" + x + "y:" + y);
                 compute.clickLineX1 = (int) x;
                 compute.clickLineY1 = (int) y;
                 return false;
@@ -64,7 +60,6 @@ public class ImageCanvas extends Canvas {
                 line.setX1(x);
                 line.setY1(y);
                 line.draw();
-                System.out.println("druhy bod x:" + x + "y:" + y);
                 compute.clickLineX2 = (int) x;
                 compute.clickLineY2 = (int) y;
                 return true;
