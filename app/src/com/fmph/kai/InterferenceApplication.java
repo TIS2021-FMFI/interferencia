@@ -3,13 +3,17 @@ package com.fmph.kai;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
+import com.fmph.kai.util.Compute;
 import com.fmph.kai.util.ExceptionHandler;
 import com.fmph.kai.util.Vector2D;
+import com.fmph.kai.util.Formula;
+import com.fmph.kai.util.MPoint;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -22,26 +26,29 @@ import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.opencv.core.Core;
-
 import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
 
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
-    private final double width = 900;
-    private final double height = 600;
+    private final double width = 1350;
+    private final double height = 900;
 
     private Group root;
     private Stage stage;
     private Scene scene;
 
     private Capture capture;
+    private Compute compute;
+
+    TextArea textArea;
 
     @Override
     public void start(Stage stage) {
+        compute = new Compute();
         System.out.println("Using OpenCV v" + Core.VERSION);
         System.out.println("Using JavaFX v" + com.sun.javafx.runtime.VersionInfo.getVersion());
         this.stage = stage;
@@ -52,6 +59,29 @@ public class InterferenceApplication extends Application {
 
         stage.setScene(scene);
         stage.show();
+
+    }
+
+    private void calculateRs()
+    {
+        double pixelDistance = Math.sqrt((compute.x1Len - compute.x2Len) * (compute.x1Len - compute.x2Len) +
+                                         (compute.y1Len - compute.y2Len) * (compute.y1Len - compute.y2Len));
+        double mmDistance = compute.lengthLen;
+
+
+        Formula formula = new Formula();
+        textArea.clear();
+        for (int i = 0; i < compute.numMaxima - 1; i++) {
+            MPoint p = compute.maxlist.get(i);
+            double x1 = Math.sqrt((p.x - compute.x1) * (p.x - compute.x1) + (p.y - compute.y1) * (p.y - compute.y1));
+            p = compute.maxlist.get(i + 1);
+            double x2 = Math.sqrt((p.x - compute.x1) * (p.x - compute.x1) + (p.y - compute.y1) * (p.y - compute.y1));
+
+            x1 = x1 / pixelDistance * mmDistance;
+            x2 = x2 / pixelDistance * mmDistance;
+            double r = formula.finalR(x1, x2);
+            textArea.appendText((i + 1)+ ": x1=" + String.format("%.4f", x1) + ", x2=" + String.format("%.4f", x2) + ", R=" + String.format("%.4f", r) + "\n");
+        }
 
     }
 
@@ -80,15 +110,17 @@ public class InterferenceApplication extends Application {
         NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("X");
         yAxis.setLabel("Y");
+        yAxis.setAutoRanging(false);
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
         lineChart.setMaxWidth(width/2);
+        lineChart.prefHeight(1000);
         lineChart.setMaxHeight(height/2);
         VBox vboxGrafOutput = new VBox(10);
         vboxGrafOutput.getChildren().add(lineChart);
 
         // Output box
-        final TextArea textArea = TextAreaBuilder.create()
-                .prefWidth(300)
+        textArea = TextAreaBuilder.create()
+                .prefWidth(650)   //change here
                 .wrapText(true)
                 .build();
         vboxGrafOutput.getChildren().add(textArea);
@@ -177,7 +209,7 @@ public class InterferenceApplication extends Application {
         borderPane.setBottom(bottom);
 
         // ImageCanvas
-        ImageCanvas imageCanvas = new ImageCanvas(width/2, height);
+        ImageCanvas imageCanvas = new ImageCanvas(width/2, height-200, compute);
         imageCanvas.heightProperty().bind(vboxGrafOutput.heightProperty());
         imageCanvas.reset();
         borderPane.setLeft(imageCanvas);
@@ -190,27 +222,83 @@ public class InterferenceApplication extends Application {
             }
         });
 
+
         imageCanvas.setOnMouseClicked(e -> {
-            if (e.getButton() == MouseButton.PRIMARY && imageCanvas.leftClick(e.getX(), e.getY())) {
-                // Ask for number of maximums
-                TextInputDialog tid = new TextInputDialog();
-                tid.setHeaderText("Enter the number of maximums to be analyzed:");
-                Integer numMaximums = null; // <- use this value for the calculations
-                Optional<String> stringMaximums = tid.showAndWait();
-                try {
-                    numMaximums = Integer.parseInt(stringMaximums.get());
-                } catch (NumberFormatException | NoSuchElementException exception) {
-                    ExceptionHandler.handle(exception);
+            if (e.getButton() == MouseButton.PRIMARY && imageCanvas.leftClick(new Vector2D(e.getX(), e.getY()))) {
+                System.out.println("nejaky print");
+
+                if (compute.lengthLen > 0) {
+                    // Ask for number of maximums
+                    TextInputDialog tid = new TextInputDialog();
+                    tid.setHeaderText("Enter the number of maximums to be analyzed:");
+
+                    Optional<String> stringMaximums = tid.showAndWait();
+                    try {
+                        compute.numMaxima = Integer.parseInt(stringMaximums.get());
+                    } catch (NumberFormatException | NoSuchElementException exception) {
+                        ExceptionHandler.handle(exception);
+                    }
+
+                    compute.colorize(imageCanvas.getImage());
+                    double yborder = (compute.ymax - compute.ymin) * 0.1;
+                    yAxis.setLowerBound(compute.ymin - yborder);
+                    yAxis.setUpperBound(compute.ymax + yborder);
+
+                    //compute.printPointList();
+                    compute.analyze();
+                    //compute.printPointList();
+                    //compute.printMaxList();
+
+                    System.out.println("XXXXXXXXXXXXXXXXXXXXX");
+
+                    // Redraw the graph
+                    lineChart.getData().clear();
+                    XYChart.Series<Number, Number> series = new XYChart.Series<>();
+                    series.setName("Interference");
+                    for (MPoint p : compute.pointlist) {
+                        series.getData().add(new XYChart.Data<>(p.seq, p.suc));
+                        //series.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
+                        //System.out.println(p.x+" "+p.y);
+                    }
+                    XYChart.Series<Number, Number> maxes = new XYChart.Series<>();
+                    maxes.setName("Maxima");
+
+                    for (MPoint p : compute.maxlist) {
+                        maxes.getData().add(new XYChart.Data<>(p.seq, p.suc));
+                        //maxes.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
+                        //System.out.println(p.x+" "+p.y);
+                    }
+                    //for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
+                    //    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
+                    //}
+
+                    lineChart.getData().add(series);
+                    lineChart.getData().add(maxes);
+                    maxes.nodeProperty().get().setStyle("-fx-stroke: transparent;");
+                    Set<Node> lookupAll = lineChart.lookupAll(".series1.chart-line-symbol");
+                    for (Node n : lookupAll) {
+                        n.setStyle("-fx-background-color: #00AA00, #AA0000");
+                    }
+                    calculateRs();
+
+                } else {
+                    compute.lengthClickLen = Math.sqrt((double) (compute.clickLenX1-compute.clickLenX2)*(compute.clickLenX1-compute.clickLenX2) + (double) (compute.clickLenY1-compute.clickLenY2)*(compute.clickLenY1-compute.clickLenY2));
+                    // Ask for number of maximums
+                    TextInputDialog tid = new TextInputDialog();
+                    tid.setHeaderText("Enter line lenght in milimeters");
+                    Integer inp = null; // <- use this value for the calculations
+                    Optional<String> lineLength = tid.showAndWait();
+                    try {
+                        inp = Integer.parseInt(lineLength.get());
+                        if (inp <= 0) {
+                            throw new NumberFormatException("Number can not be negative");
+                        }
+                        compute.lengthLen = (double) inp;
+                    } catch (NumberFormatException | NoSuchElementException exception) {
+                        ExceptionHandler.handle(exception);
+                    }
                 }
 
-                // Redraw the graph
-                lineChart.getData().clear();
-                XYChart.Series<Number, Number> series = new XYChart.Series<>();
-                series.setName("Sinusoid");
-                for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
-                    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
-                }
-                lineChart.getData().add(series);
             }
         });
 
@@ -245,8 +333,13 @@ public class InterferenceApplication extends Application {
             tid.show();
         });
 
+        setLineSizeMenuItem.setOnAction(e -> {
+
+        });
+
         resetLineMenuItem.setOnAction(e -> {
             imageCanvas.resetLine();
+            //need to reset line Xs and Ys!!
         });
 
         cameraCalibrationMenuItem.setOnAction(e -> {
@@ -258,8 +351,23 @@ public class InterferenceApplication extends Application {
             }
         });
 
+        btnUploadImage.setOnAction(e -> {
+            File file = getImageFromFilesystem();
+            System.out.println("btn clicked");
+            if (file != null) {
+                imageCanvas.setImage(new Image(file.toURI().toString()));
+            }
+        });
+
+        btnCalibration.setOnAction(e -> {
+            File file = getImageFromFilesystem();
+            if (file != null) {
+                //do smth with calibration file, idk what
+            }
+        });
+
         capture = new Capture();
-        startCaptureMenuItem.setOnAction(e -> {
+        btnReadCamera.setOnAction(e -> {
             try {
                 if (capture.isCapturing()) {
                     startCaptureMenuItem.setText("Start capture");
@@ -306,6 +414,8 @@ public class InterferenceApplication extends Application {
 
         root.getChildren().add(borderPane);
     }
+
+
 
     private File getImageFromFilesystem() {
         FileChooser fileChooser = new FileChooser();
