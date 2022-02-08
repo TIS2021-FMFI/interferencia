@@ -79,6 +79,7 @@ public class InterferenceApplication extends Application {
 
             x1 = x1 / pixelDistance * mmDistance;
             x2 = x2 / pixelDistance * mmDistance;
+            formula.d = compute.dHandler;
             double r = formula.finalR(x1, x2);
             textArea.appendText((i + 1)+ ": x1=" + String.format("%.4f", x1) + ", x2=" + String.format("%.4f", x2) + ", R=" + String.format("%.4f", r) + "\n");
         }
@@ -144,7 +145,6 @@ public class InterferenceApplication extends Application {
         imageCanvas.setOnMouseClicked(e -> {
 
             if (imageCanvas.click(e.getX(), e.getY())) {
-                System.out.println("nejaky print");
 
                 if (compute.lengthLen > 0) {
                     // Ask for number of maximums
@@ -163,12 +163,7 @@ public class InterferenceApplication extends Application {
                     yAxis.setLowerBound(compute.ymin - yborder);
                     yAxis.setUpperBound(compute.ymax + yborder);
 
-                    //compute.printPointList();
                     compute.analyze();
-                    //compute.printPointList();
-                    //compute.printMaxList();
-
-                    System.out.println("XXXXXXXXXXXXXXXXXXXXX");
 
                     // Redraw the graph
                     lineChart.getData().clear();
@@ -177,7 +172,6 @@ public class InterferenceApplication extends Application {
                     for (MPoint p : compute.pointlist) {
                         series.getData().add(new XYChart.Data<>(p.seq, p.suc));
                         //series.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
-                        //System.out.println(p.x+" "+p.y);
                     }
                     XYChart.Series<Number, Number> maxes = new XYChart.Series<>();
                     maxes.setName("Maxima");
@@ -185,7 +179,6 @@ public class InterferenceApplication extends Application {
                     for (MPoint p : compute.maxlist) {
                         maxes.getData().add(new XYChart.Data<>(p.seq, p.suc));
                         //maxes.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
-                        //System.out.println(p.x+" "+p.y);
                     }
                     //for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
                     //    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
@@ -319,7 +312,6 @@ public class InterferenceApplication extends Application {
 
         btnUploadImage.setOnAction(e -> {
             File file = getImageFromFilesystem();
-            System.out.println("btn clicked");
             if (file != null) {
                 imageCanvas.setImage(new Image(file.toURI().toString()));
             }
@@ -445,6 +437,18 @@ public class InterferenceApplication extends Application {
         borderPane.setBottom(bottom);
 
         root.getChildren().add(borderPane);
+
+        btnCalibration.setOnAction(e -> {
+            try {
+                compute.dHandler = Double.valueOf(txtPar1.getText());
+            } catch (NumberFormatException | NoSuchElementException exception) {
+                ExceptionHandler.handle(exception);
+            }
+        });
+
+
+
+
     }
 
 

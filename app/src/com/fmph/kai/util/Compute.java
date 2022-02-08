@@ -33,6 +33,7 @@ public class Compute {
     public double ymin,ymax;
     public double x1, y1, x2, y2;
     public double x1Len, y1Len, x2Len, y2Len;
+    public double dHandler;
 
     public double chybicka = 0.005;
 
@@ -185,7 +186,6 @@ public class Compute {
                 calculateIntensity(pixelreader, p);
                 p.seq = seq;
                 seq = seq + 1;
-                //System.out.println("farby "+p.x+" "+p.y+" "+p.r+" "+p.g+" "+p.b+" "+p.suc);
                 if (seq == 1)
                 {
                     ymin = p.suc;
