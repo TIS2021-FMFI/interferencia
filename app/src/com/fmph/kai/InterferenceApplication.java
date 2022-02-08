@@ -58,6 +58,7 @@ public class InterferenceApplication extends Application {
         stage.setTitle("Interference analyzer");
 
         stage.setScene(scene);
+        stage.setScene(scene);
         stage.show();
 
     }
@@ -148,25 +149,28 @@ public class InterferenceApplication extends Application {
         hboxImage1.getChildren().addAll(btnReadCamera, btnUploadImage);
         hboxImage2.getChildren().addAll(btnCalibration, chkCalibration);
         vboxImage.getChildren().addAll(hboxImage1, hboxImage2);
-
+        
         // Canvas tools
         HBox hboxCanvas = new HBox(10);
         hboxCanvas.setPadding(new Insets(5));
         hboxCanvas.setStyle("-fx-border-color: silver");
         TextField txtLineLength = new TextField("Line length");
         Button btnSubmitLineLength = new Button("Submit");
-        btnSubmitLineLength.setPrefWidth(90);
+        btnSubmitLineLength.setPrefWidth(100);
         HBox hboxCanvasTop = new HBox(5);
         hboxCanvasTop.getChildren().addAll(txtLineLength, btnSubmitLineLength);
         Label lblLineThickness = new Label("Line thickness");
         Slider sldLineThickness = new Slider();
-        sldLineThickness.setMin(0);
-        sldLineThickness.setMax(5);
+        sldLineThickness.setMin(1);
+        sldLineThickness.setMax(9);
         sldLineThickness.setShowTickLabels(true);
         sldLineThickness.setShowTickMarks(true);
         sldLineThickness.setMajorTickUnit(1);
         Label lblSliderValue = new Label(Double.toString(sldLineThickness.getValue()));
-        sldLineThickness.valueProperty().addListener((observable, oldValue, newValue) -> lblSliderValue.setText(String.format("%.2f", newValue)));
+        sldLineThickness.valueProperty().addListener(
+                (observable, oldValue, newValue) ->
+                { lblSliderValue.setText(String.format("%.0f", newValue));
+                  compute.lineWidth = (int)(0.5 + newValue.doubleValue()); });
         HBox hboxCanvasBottom = new HBox(5);
         hboxCanvasBottom.getChildren().addAll(lblLineThickness, sldLineThickness, lblSliderValue);
         VBox vboxCanvasLeft = new VBox(5);
@@ -181,26 +185,36 @@ public class InterferenceApplication extends Application {
         hboxCanvas.getChildren().addAll(vboxCanvasLeft, vboxCanvasRight);
 
         // Calculation tools
-        VBox vboxCalculation = new VBox(5);
+        VBox vboxCalculation = new VBox(10);
         vboxCalculation.setPadding(new Insets(5));
         vboxCalculation.setStyle("-fx-border-color: silver");
-        Label lblParameters = new Label("Setup parameters");
+        Label lblParameters = new Label("Setup parameters: D=");
         TextField txtPar1 = new TextField();
-        txtPar1.setPrefWidth(30);
+        txtPar1.setPrefWidth(50);
+        Label lblParameters2 = new Label("?=");
         TextField txtPar2 = new TextField();
-        txtPar2.setPrefWidth(30);
+        txtPar2.setPrefWidth(50);
+        Label lblParameters3 = new Label("?=");
         TextField txtPar3 = new TextField();
-        txtPar3.setPrefWidth(30);
+        txtPar3.setPrefWidth(50);
         Button btnSubmitParameters = new Button("Submit");
-        HBox hboxCalculation1 = new HBox(5);
-        hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, txtPar2, txtPar3, btnSubmitParameters);
+        HBox hboxCalculation1 = new HBox(15);
+        hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, lblParameters2, txtPar2, lblParameters3, txtPar3, btnSubmitParameters);
         Button btnGenerateMinMax = new Button("Find MIN/MAX R");
-        btnGenerateMinMax.setPrefWidth(128);
+        btnGenerateMinMax.setPrefWidth(200);
         Button btnGeneratePointCloud = new Button("Save data");
-        btnGeneratePointCloud.setPrefWidth(128);
-        HBox hboxCalculation2 = new HBox(5);
+        btnGeneratePointCloud.setPrefWidth(200);
+        HBox hboxCalculation2 = new HBox(15);
         hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
         vboxCalculation.getChildren().addAll(hboxCalculation1, hboxCalculation2);
+
+        btnSubmitParameters.setOnAction(e -> {
+            try {
+                compute.dHandler = Double.valueOf(txtPar1.getText());
+            } catch (NumberFormatException | NoSuchElementException exception) {
+                ExceptionHandler.handle(exception);
+            }
+        });
 
         bottom.getChildren().addAll(
                 vboxImage,
@@ -402,20 +416,8 @@ public class InterferenceApplication extends Application {
                 ExceptionHandler.handle(exception);
             }
         });
-
+      
         root.getChildren().add(borderPane);
-
-        btnCalibration.setOnAction(e -> {
-            try {
-                compute.dHandler = Double.valueOf(txtPar1.getText());
-            } catch (NumberFormatException | NoSuchElementException exception) {
-                ExceptionHandler.handle(exception);
-            }
-        });
-
-
-
-
     }
 
 
