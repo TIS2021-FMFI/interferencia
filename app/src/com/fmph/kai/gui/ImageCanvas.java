@@ -96,10 +96,7 @@ public class ImageCanvas extends Canvas {
             } else {
                 line.setStop(mousePosition);
                 reset();
-
-                line.setX1(mousePosition.x);
-                line.setY1(mousePosition.y);
-
+                
                 compute.clickLineX2 = (int) mousePosition.x;
                 compute.clickLineY2 = (int) mousePosition.y;
                 return true;
