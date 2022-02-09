@@ -9,12 +9,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
+import java.util.function.Function;
+
 public class ToggleSwitch extends StackPane {
     private final Rectangle back = new Rectangle(40, 10, Color.RED);
     private final Button button = new Button();
     private final String buttonStyleOff = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 0.2, 0.0, 0.0, 2); -fx-background-color: WHITE;";
     private final String buttonStyleOn = "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 0.2, 0.0, 0.0, 2); -fx-background-color: #00893d;";
     private boolean state;
+    private OnEnabled onEnabled;
+    private OnDisabled onDisabled;
 
     private void init() {
         getChildren().addAll(back, button);
@@ -44,11 +48,13 @@ public class ToggleSwitch extends StackPane {
                     back.setFill(Color.valueOf("#ced5da"));
                     setAlignment(button, Pos.CENTER_LEFT);
                     state = false;
+                    onDisabled.invoke();
                 } else {
                     button.setStyle(buttonStyleOn);
                     back.setFill(Color.valueOf("#80C49E"));
                     setAlignment(button, Pos.CENTER_RIGHT);
                     state = true;
+                    onEnabled.invoke();
                 }
             }
         };
@@ -56,5 +62,18 @@ public class ToggleSwitch extends StackPane {
         button.setFocusTraversable(false);
         setOnMouseClicked(click);
         button.setOnMouseClicked(click);
+    }
+
+    public void setOnEnabled(OnEnabled onEnabled) {
+        this.onEnabled = onEnabled;
+    }
+    public void setOnDisabled(OnDisabled onDisabled) {
+        this.onDisabled = onDisabled;
+    }
+    public interface OnEnabled {
+        void invoke();
+    }
+    public interface OnDisabled {
+        void invoke();
     }
 }
