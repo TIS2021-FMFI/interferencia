@@ -10,6 +10,9 @@ public class Line {
     private final GraphicsContext gc;
 
     public void setStop(Vector2D stop) { this.stop = stop; }
+    public Vector2D getStop() { return this.stop; }
+    public void setStart(Vector2D start) { this.start = start; }
+    public Vector2D getStart() { return this.start; }
 
     public Line(Vector2D start, GraphicsContext gc) {
         this.start = start;

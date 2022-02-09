@@ -14,7 +14,7 @@ public class ImageCanvas extends Canvas {
     private double aspectRatio;
     private Vector2D imagePosition;
     private Vector2D offset;
-    private Compute compute;
+    private final Compute compute;
 
     public ImageCanvas(double width, double height, Compute compute) {
         this.compute = compute;
