@@ -27,7 +27,7 @@ public class Compute {
 
     public double lengthClickLen = -1;
     public double lengthLen = -1;
-    public int lineWidth = 1;
+    public int lineWidth = 5;
     public int numMaxima = 2; // <- use this value for the calculations
 
     public double ymin,ymax;
