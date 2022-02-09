@@ -72,7 +72,6 @@ public class ImageCanvas extends Canvas {
     public boolean leftClick(Vector2D mousePosition) {
         if (image == null) return false;
         if (compute.lengthLen < 0) {
-            System.out.println("prvy if klik"+compute.clickLenX1);
             if (compute.clickLenX1 < 0) {
                 Line.pointX(mousePosition.x, mousePosition.y, getGraphicsContext2D());
                 compute.clickLenX1 = (int) mousePosition.x;
@@ -88,15 +87,19 @@ public class ImageCanvas extends Canvas {
             }
         } else {
             if (line == null) {
+
                 line = new Line(mousePosition, getGraphicsContext2D());
-                System.out.println("prvy bod x:" + mousePosition.x + "y:" + mousePosition.y);
+
                 compute.clickLineX1 = (int) mousePosition.x;
                 compute.clickLineY1 = (int) mousePosition.y;
                 return false;
             } else {
                 line.setStop(mousePosition);
                 reset();
-                System.out.println("druhy bod x:" + mousePosition.x + "y:" + mousePosition.y);
+
+                line.setX1(mousePosition.x);
+                line.setY1(mousePosition.y);
+
                 compute.clickLineX2 = (int) mousePosition.x;
                 compute.clickLineY2 = (int) mousePosition.y;
                 return true;

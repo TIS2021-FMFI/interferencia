@@ -24,7 +24,6 @@ public class Line {
     }
 
     public void draw() {
-        System.out.println("kreslim ciaru");
         gc.setLineWidth(3);
         gc.setStroke(Color.RED);
         gc.strokeLine(start.x, start.y, stop.x, stop.y);
