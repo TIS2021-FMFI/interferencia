@@ -156,15 +156,15 @@ public class InterferenceApplication extends Application {
         HBox hboxCanvas = new HBox(10);
         hboxCanvas.setPadding(new Insets(5));
         hboxCanvas.setStyle("-fx-border-color: silver");
-        TextField txtLineLength = new TextField("Line length");
-        Button btnSubmitLineLength = new Button("Submit");
-        btnSubmitLineLength.setPrefWidth(100);
+        //TextField txtLineLength = new TextField("Line length");
+        //Button btnSubmitLineLength = new Button("Submit");
+        //btnSubmitLineLength.setPrefWidth(100);
         HBox hboxCanvasTop = new HBox(5);
-        hboxCanvasTop.getChildren().addAll(txtLineLength, btnSubmitLineLength);
+        //hboxCanvasTop.getChildren().addAll(txtLineLength, btnSubmitLineLength);
         Label lblLineThickness = new Label("Line thickness");
-        Slider sldLineThickness = new Slider();
-        sldLineThickness.setMin(1);
-        sldLineThickness.setMax(9);
+        Slider sldLineThickness = new Slider(1, 9, 5);
+        //sldLineThickness.setMin(1);
+        //sldLineThickness.setMax(9);
         sldLineThickness.setShowTickLabels(true);
         sldLineThickness.setShowTickMarks(true);
         sldLineThickness.setMajorTickUnit(1);
@@ -177,14 +177,14 @@ public class InterferenceApplication extends Application {
         hboxCanvasBottom.getChildren().addAll(lblLineThickness, sldLineThickness, lblSliderValue);
         VBox vboxCanvasLeft = new VBox(5);
         vboxCanvasLeft.getChildren().addAll(hboxCanvasTop, hboxCanvasBottom);
-        ToggleGroup toggleGroup = new ToggleGroup();
-        RadioButton rdbSelectLine = new RadioButton("Select line");
-        rdbSelectLine.setToggleGroup(toggleGroup);
-        RadioButton rdbSelectPoint = new RadioButton("Select point");
-        rdbSelectPoint.setToggleGroup(toggleGroup);
-        VBox vboxCanvasRight = new VBox(5);
-        vboxCanvasRight.getChildren().addAll(rdbSelectLine, rdbSelectPoint);
-        hboxCanvas.getChildren().addAll(vboxCanvasLeft, vboxCanvasRight);
+        //ToggleGroup toggleGroup = new ToggleGroup();
+        //RadioButton rdbSelectLine = new RadioButton("Select line");
+        //rdbSelectLine.setToggleGroup(toggleGroup);
+        //RadioButton rdbSelectPoint = new RadioButton("Select point");
+        //rdbSelectPoint.setToggleGroup(toggleGroup);
+        //VBox vboxCanvasRight = new VBox(5);
+        //vboxCanvasRight.getChildren().addAll(rdbSelectLine, rdbSelectPoint);
+        hboxCanvas.getChildren().addAll(vboxCanvasLeft);
 
         // Calculation tools
         VBox vboxCalculation = new VBox(10);
@@ -196,19 +196,19 @@ public class InterferenceApplication extends Application {
         Label lblParameters2 = new Label("?=");
         TextField txtPar2 = new TextField();
         txtPar2.setPrefWidth(50);
-        Label lblParameters3 = new Label("?=");
-        TextField txtPar3 = new TextField();
-        txtPar3.setPrefWidth(50);
+        //Label lblParameters3 = new Label("?=");
+        //TextField txtPar3 = new TextField();
+        //txtPar3.setPrefWidth(50);
         Button btnSubmitParameters = new Button("Submit");
         HBox hboxCalculation1 = new HBox(15);
-        hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, lblParameters2, txtPar2, lblParameters3, txtPar3, btnSubmitParameters);
-        Button btnGenerateMinMax = new Button("Find MIN/MAX R");
-        btnGenerateMinMax.setPrefWidth(200);
-        Button btnGeneratePointCloud = new Button("Save data");
-        btnGeneratePointCloud.setPrefWidth(200);
-        HBox hboxCalculation2 = new HBox(15);
-        hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
-        vboxCalculation.getChildren().addAll(hboxCalculation1, hboxCalculation2);
+        hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, lblParameters2, txtPar2, btnSubmitParameters);
+        //Button btnGenerateMinMax = new Button("Find MIN/MAX R");
+        //btnGenerateMinMax.setPrefWidth(200);
+        //Button btnGeneratePointCloud = new Button("Save data");
+        //btnGeneratePointCloud.setPrefWidth(200);
+        //HBox hboxCalculation2 = new HBox(15);
+        //hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
+        vboxCalculation.getChildren().addAll(hboxCalculation1);
 
         btnSubmitParameters.setOnAction(e -> {
             try {
