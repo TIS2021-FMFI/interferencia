@@ -76,13 +76,13 @@ public class ImageCanvas extends Canvas {
                 Line.pointX(mousePosition.x, mousePosition.y, getGraphicsContext2D());
                 compute.clickLenX1 = (int) mousePosition.x;
                 compute.clickLenY1 = (int) mousePosition.y;
-                System.out.println("klik 1");
+
                 return false;
             } else {
                 Line.pointX(mousePosition.x, mousePosition.y, getGraphicsContext2D());
                 compute.clickLenX2 = (int) mousePosition.x;
                 compute.clickLenY2 = (int) mousePosition.y;
-                System.out.println("klik 2");
+
                 return true;
             }
         } else {
