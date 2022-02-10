@@ -8,7 +8,7 @@ Contributors:
 
 ## Documentation
 * [WIKI](https://github.com/TIS2021-FMFI/interferencia/wiki) - transcripts from all team meetings
-* [Documentation]() - full documentation solution
+* [Documentation](https://github.com/TIS2021-FMFI/interferencia/tree/main/Documentation) - full documentation solution
 
 ## Installation guide
 
