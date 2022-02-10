@@ -35,8 +35,8 @@ import java.util.Set;
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
-    private final double width = 1350;
-    private final double height = 900;
+    private final double width = 1200;
+    private final double height = 600;
 
     private Group root;
     private Stage stage;
@@ -115,56 +115,53 @@ public class InterferenceApplication extends Application {
         yAxis.setLabel("Y");
         yAxis.setAutoRanging(false);
         LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
-        lineChart.setMaxWidth(width/2);
+        lineChart.setMaxWidth(width/2 );
         lineChart.prefHeight(1000);
         lineChart.setMaxHeight(height/2);
         VBox vboxGrafOutput = new VBox(10);
+        vboxGrafOutput.setPadding(new Insets(10,10,10,10));
+        vboxGrafOutput.setMaxWidth(width/2-20);
+        vboxGrafOutput.setStyle("-fx-border-color: silver");
         vboxGrafOutput.getChildren().add(lineChart);
 
         // Output box
         textArea = TextAreaBuilder.create()
-                .prefWidth(650)   //change here
                 .wrapText(true)
                 .build();
+        textArea.setMaxWidth(width/2-40);
         vboxGrafOutput.getChildren().add(textArea);
         textArea.setEditable(false);
+
         borderPane.setRight(vboxGrafOutput);
 
         // Bottom pane
-        HBox bottom = new HBox(10);
+        HBox bottom = new HBox(30);
         bottom.setPadding(new Insets(5));
 
         // Image tools
         VBox vboxImage = new VBox(10);
-        vboxImage.setPadding(new Insets(5));
+        vboxImage.setPadding(new Insets(15,5,10,5));
         vboxImage.setStyle("-fx-border-color: silver");
         HBox hboxImage1 = new HBox(10);
-        HBox hboxImage2 = new HBox(10);
         Label lblCapture = new Label("Capture");
         ToggleSwitch tglCapture = new ToggleSwitch();
         tglCapture.setPrefWidth(40);
         Button btnUploadImage = new Button("Upload the image");
         btnUploadImage.setPrefWidth(120);
         Button btnCalibration = new Button("Select calibration file");
-        btnCalibration.setPrefWidth(120);
+        btnCalibration.setPrefWidth(140);
         CheckBox chkCalibration = new CheckBox("use the calibration");
-        hboxImage1.getChildren().addAll(lblCapture, tglCapture, btnUploadImage);
-        hboxImage2.getChildren().addAll(btnCalibration, chkCalibration);
-        vboxImage.getChildren().addAll(hboxImage1, hboxImage2);
+        hboxImage1.getChildren().addAll(lblCapture, tglCapture, btnUploadImage, btnCalibration, chkCalibration);
+        vboxImage.getChildren().addAll(hboxImage1);
         
         // Canvas tools
         HBox hboxCanvas = new HBox(10);
         hboxCanvas.setPadding(new Insets(5));
         hboxCanvas.setStyle("-fx-border-color: silver");
-        //TextField txtLineLength = new TextField("Line length");
-        //Button btnSubmitLineLength = new Button("Submit");
-        //btnSubmitLineLength.setPrefWidth(100);
         HBox hboxCanvasTop = new HBox(5);
-        //hboxCanvasTop.getChildren().addAll(txtLineLength, btnSubmitLineLength);
+
         Label lblLineThickness = new Label("Line thickness");
         Slider sldLineThickness = new Slider(1, 9, 5);
-        //sldLineThickness.setMin(1);
-        //sldLineThickness.setMax(9);
         sldLineThickness.setShowTickLabels(true);
         sldLineThickness.setShowTickMarks(true);
         sldLineThickness.setMajorTickUnit(1);
@@ -177,37 +174,21 @@ public class InterferenceApplication extends Application {
         hboxCanvasBottom.getChildren().addAll(lblLineThickness, sldLineThickness, lblSliderValue);
         VBox vboxCanvasLeft = new VBox(5);
         vboxCanvasLeft.getChildren().addAll(hboxCanvasTop, hboxCanvasBottom);
-        //ToggleGroup toggleGroup = new ToggleGroup();
-        //RadioButton rdbSelectLine = new RadioButton("Select line");
-        //rdbSelectLine.setToggleGroup(toggleGroup);
-        //RadioButton rdbSelectPoint = new RadioButton("Select point");
-        //rdbSelectPoint.setToggleGroup(toggleGroup);
-        //VBox vboxCanvasRight = new VBox(5);
-        //vboxCanvasRight.getChildren().addAll(rdbSelectLine, rdbSelectPoint);
         hboxCanvas.getChildren().addAll(vboxCanvasLeft);
 
         // Calculation tools
         VBox vboxCalculation = new VBox(10);
-        vboxCalculation.setPadding(new Insets(5));
+        vboxCalculation.setPadding(new Insets(15,5,10,5));
         vboxCalculation.setStyle("-fx-border-color: silver");
-        Label lblParameters = new Label("Setup parameters: D=");
+        Label lblParameters = new Label("Setup parameters: D =");
         TextField txtPar1 = new TextField();
         txtPar1.setPrefWidth(50);
-        Label lblParameters2 = new Label("?=");
+        Label lblParameters2 = new Label("λ =");
         TextField txtPar2 = new TextField();
         txtPar2.setPrefWidth(50);
-        //Label lblParameters3 = new Label("?=");
-        //TextField txtPar3 = new TextField();
-        //txtPar3.setPrefWidth(50);
         Button btnSubmitParameters = new Button("Submit");
         HBox hboxCalculation1 = new HBox(15);
         hboxCalculation1.getChildren().addAll(lblParameters, txtPar1, lblParameters2, txtPar2, btnSubmitParameters);
-        //Button btnGenerateMinMax = new Button("Find MIN/MAX R");
-        //btnGenerateMinMax.setPrefWidth(200);
-        //Button btnGeneratePointCloud = new Button("Save data");
-        //btnGeneratePointCloud.setPrefWidth(200);
-        //HBox hboxCalculation2 = new HBox(15);
-        //hboxCalculation2.getChildren().addAll(btnGenerateMinMax, btnGeneratePointCloud);
         vboxCalculation.getChildren().addAll(hboxCalculation1);
 
         btnSubmitParameters.setOnAction(e -> {
