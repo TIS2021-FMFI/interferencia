@@ -14,6 +14,9 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.opencv.core.Size;
 
+/**
+ * Handles the GUI of the calibration window.
+ */
 public class CameraCalibrationWindow extends Stage {
     private final Capture capture;
     private Calibration calibration;
@@ -24,6 +27,15 @@ public class CameraCalibrationWindow extends Stage {
 
     private final Button btnTakeSnapshot;
 
+    /**
+     * Creates the class instance (not showing the window).
+     * Defines all GUI elements and their behaviour.
+     * @param x is the left margin of the window
+     * @param y is the top margin of the window
+     * @param width is the width of the window
+     * @param height is the height of the window
+     * @throws Capture.CaptureException if failed to get the available cameras
+     */
     public CameraCalibrationWindow(double x, double y, double width, double height) throws Capture.CaptureException {
         super();
         this.setTitle("Camera calibration");

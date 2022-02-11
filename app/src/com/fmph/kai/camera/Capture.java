@@ -19,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 
 import static org.opencv.videoio.Videoio.CAP_DSHOW;
 
+/**
+ * Handles the camera capturing process.
+ */
 public class Capture {
     private boolean capturing;
     private final VideoCapture capture;
@@ -26,23 +29,42 @@ public class Capture {
     
     private OnFrameReceived onFrameReceived = frame -> {};
 
+    /**
+     * Allows to define the actions performed after a new frame from the camera was received.
+     */
     public interface OnFrameReceived {
         void invoke(Mat frame);
     }
 
+    /**
+     * Tells if the capture is on or off.
+     * @return true if capturing now, else false
+     */
     public boolean isCapturing() {
         return capturing;
     }
-    
+
+    /**
+     * Sets the callback function invoked after a frame from the camera was received.
+     * @param onFrameReceived the callback function
+     */
     public void setOnFrameReceived(OnFrameReceived onFrameReceived) {
         this.onFrameReceived = onFrameReceived;
     }
 
+    /**
+     * Initializes the OpenCV VideoCapture.
+     */
     public Capture() {
         capturing = false;
         capture = new VideoCapture();
     }
 
+    /**
+     * Starts the capturing process with the camera index specified.
+     * @param cameraIndex the index of the camera to start capture with
+     * @throws CaptureException if the capture has been already started or failed to open the camera
+     */
     public void start(int cameraIndex) throws CaptureException {
         if (capturing || capture.isOpened()) {
             throw new CaptureException("Already capturing.");
@@ -63,6 +85,10 @@ public class Capture {
         timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Stops the capturing.
+     * @throws CaptureException if the capture hasn't been started
+     */
     public void stop() throws CaptureException {
         if (!capturing || !capture.isOpened()) {
             throw new CaptureException("Capture is not opened.");
@@ -81,12 +107,24 @@ public class Capture {
         return null;
     }
 
+    /**
+     * Converts the OpenCV matrix into the JavaFX Image.
+     * @param frame the matrix
+     * @return the converted image
+     * @see Mat
+     * @see Image
+     */
     public static Image Mat2Image(Mat frame) {
         MatOfByte buffer = new MatOfByte();
         Imgcodecs.imencode(".png", frame, buffer);
         return new Image(new ByteArrayInputStream(buffer.toArray()));
     }
-    
+
+    /**
+     * Runs the Python script to get the cameras available on the PC.
+     * @return the list with camera indexes
+     * @throws CaptureException if the Python script has failed
+     */
     public static ObservableList<Integer> getAvailableCameras() throws CaptureException {
         ProcessBuilder processBuilder = new ProcessBuilder("python", "app/src/com/fmph/kai/camera_test.py");
         ObservableList<Integer> cameraIndexes = FXCollections.observableArrayList();
@@ -117,6 +155,9 @@ public class Capture {
         return cameraIndexes;
     }
 
+    /**
+     * Custom exception for this class only.
+     */
     public static class CaptureException extends Exception {
         public CaptureException(String msg) {
             super(msg);

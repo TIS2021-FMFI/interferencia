@@ -11,6 +11,9 @@ import javafx.scene.shape.Rectangle;
 
 import java.util.function.Function;
 
+/**
+ * The definition of the Toggle Switch GUI element and its behaviour.
+ */
 public class ToggleSwitch extends StackPane {
     private final Rectangle back = new Rectangle(40, 10, Color.RED);
     private final Button button = new Button();
@@ -38,6 +41,9 @@ public class ToggleSwitch extends StackPane {
         button.setStyle(buttonStyleOff);
     }
 
+    /**
+     * Initializes the element and click behaviour.
+     */
     public ToggleSwitch() {
         init();
         EventHandler<Event> click = new EventHandler<Event>() {
@@ -64,15 +70,32 @@ public class ToggleSwitch extends StackPane {
         button.setOnMouseClicked(click);
     }
 
+    /**
+     * Sets the actions to be performed when the toggle is in 'On' position.
+     * @param onEnabled is the callback function
+     */
     public void setOnEnabled(OnEnabled onEnabled) {
         this.onEnabled = onEnabled;
     }
+
+    /**
+     * Sets the actions to be performed when the toggle is in 'Off' position.
+     * @param onDisabled is the callback function
+     */
     public void setOnDisabled(OnDisabled onDisabled) {
         this.onDisabled = onDisabled;
     }
+
+    /**
+     * Defines the function to be invoked on the switch to the active state.
+     */
     public interface OnEnabled {
         void invoke();
     }
+
+    /**
+     * Defines the function to be invoked on the switch to the disabled state.
+     */
     public interface OnDisabled {
         void invoke();
     }

@@ -33,6 +33,9 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Main class of the application.
+ */
 public class InterferenceApplication extends Application {
     static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
 
@@ -50,6 +53,11 @@ public class InterferenceApplication extends Application {
 
     TextArea textArea;
 
+    /**
+     * Overrides the default start method.
+     * Initializes and shows the main app window.
+     * @param stage is the window
+     */
     @Override
     public void start(Stage stage) {
         compute = new Compute();
@@ -440,6 +448,10 @@ public class InterferenceApplication extends Application {
         calibration.loadCalibration(intrinsic.getAbsolutePath(), dist.getAbsolutePath());
     }
 
+    /**
+     * Launches the app.
+     * @param args are the commandline arguments.
+     */
     public static void main(String[] args) {
         launch();
     }

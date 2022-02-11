@@ -7,6 +7,9 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
+/**
+ * The canvas, which displays the image, the line and dots selected.
+ */
 public class ImageCanvas extends Canvas {
     private Line line;
     private Image image;
@@ -16,6 +19,12 @@ public class ImageCanvas extends Canvas {
     private Vector2D offset;
     private final Compute compute;
 
+    /**
+     * Initializes the canvas.
+     * @param width the width of the canvas
+     * @param height the height of the canvas
+     * @param compute an instance of the Compute class used for the computational tasks.
+     */
     public ImageCanvas(double width, double height, Compute compute) {
         this.compute = compute;
         setWidth(width);
@@ -27,6 +36,9 @@ public class ImageCanvas extends Canvas {
         offset = null;
     }
 
+    /**
+     * Resets the canvas, redraws the image and line if available.
+     */
     public void reset() {
         GraphicsContext gc = getGraphicsContext2D();
         gc.setFill(Color.LIGHTGRAY);
@@ -40,6 +52,10 @@ public class ImageCanvas extends Canvas {
         }
     }
 
+    /**
+     * Changes the background image of the canvas.
+     * @param image the new image
+     */
     public void setImage(Image image) {
         this.image = image;
         if (image != null)
@@ -49,26 +65,48 @@ public class ImageCanvas extends Canvas {
         reset();
     }
 
+    /**
+     * Saves the mouse position to the `offset` member variable.
+     * @param mousePosition vector of x and y coordinates of the mouse related to the canvas
+     */
     public void rightPressed(Vector2D mousePosition) {
         this.offset = imagePosition.add(mousePosition.multiply(-1));
     }
 
+    /**
+     * Moves the image and updates the canvas.
+     * Sets the `offset` to null.
+     * @param mousePosition
+     */
     public void rightReleased(Vector2D mousePosition) {
         imagePosition = mousePosition.add(offset);
         reset();
         offset = null;
     }
 
+    /**
+     * Moves the image and updates the canvas.
+     * @param mousePosition
+     */
     public void rightDragged(Vector2D mousePosition) {
         if (offset == null) return;
         imagePosition = mousePosition.add(offset);
         reset();
     }
 
+    /**
+     * Returns the current background image of the canvas.
+     * @return the background image
+     */
     public Image getImage() {
         return image;
     }
 
+    /**
+     * Defines the behaviour on the left mouse click.
+     * @param mousePosition the 2d vector representing the mouse position
+     * @return true if this is not the first click on the canvas
+     */
     public boolean leftClick(Vector2D mousePosition) {
         if (image == null) return false;
         if (compute.lengthLen < 0) {
@@ -104,11 +142,19 @@ public class ImageCanvas extends Canvas {
         }
     }
 
+    /**
+     * Sets the `line` member variable to null and updates the canvas, so there is no line displayed.
+     */
     public void resetLine() {
         line = null;
         reset();
     }
 
+    /**
+     * Zooms the image according to the mouse position.
+     * @param d is the Y delta of the mouse wheel
+     * @param mousePosition is the position of the mouse
+     */
     public void zoom(double d, Vector2D mousePosition) {
         if (image == null || d < 0 && imageWidth - getWidth() < 0.1) return;
         imageWidth += d;

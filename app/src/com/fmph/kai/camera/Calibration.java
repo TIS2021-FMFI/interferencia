@@ -9,6 +9,9 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The class, which handles the whole image calibration process, using the methods provided by the OpenCV library.
+ */
 public class Calibration {
     private final Mat intrinsic = new Mat(3, 3, CvType.CV_32FC1);
     private final Mat distCoeffs = new Mat();
@@ -22,6 +25,12 @@ public class Calibration {
     private Size size;
     private OnCalibrated onCalibrated;
 
+    /**
+     * Creates the Calibration instance with the specified size and the number of required snapshots.
+     * Creates the `obj` matrix, which is the 3d representation of the board.
+     * @param size the size of the chessboard (number of horizontal and vertical inner squares)
+     * @param numRequiredSnapshots the number of the snapshots to be taken for the calibration
+     */
     public Calibration(Size size, int numRequiredSnapshots) {
         this.size = size;
         this.numRequired = numRequiredSnapshots;
@@ -30,22 +39,43 @@ public class Calibration {
         }
     }
 
+    /**
+     * Creates an empty calibration instance.
+     * This constructor should be used only when the calibration is going to be loaded afterwards.
+     */
     public Calibration() {
         numRequired = 0;
     }
 
+    /**
+     * Tells if this calibration instance is calibrated (either by actual calibration process or by loading the calibration files.
+     * @return true if calibrated and false if not
+     */
     public boolean isCalibrated() {
         return calibrated;
     }
 
+    /**
+     * Returns the number of snapshots to be taken before the calibration itself occurs.
+     * @return the number of snapshots
+     */
     public int getNumSnapshots() {
         return numSnapshots;
     }
 
+    /**
+     * Sets the callback function, which is activated when the calibration process is finished.
+     * @param onCalibrated the callback function
+     */
     public void setOnCalibrated(OnCalibrated onCalibrated) {
         this.onCalibrated = onCalibrated;
     }
 
+    /**
+     * Calibrates the input image using the matrices storing the calibration data.
+     * @param frame the matrix representing a frame
+     * @return the matrix calibrated using intrinsic and extrinsic matrices
+     */
     public Mat calibrateImage(Mat frame) {
         Mat undistorted = new Mat();
         Calib3d.undistort(frame, undistorted, intrinsic, distCoeffs);
@@ -57,6 +87,11 @@ public class Calibration {
         saveDoubleMat(distCoeffs, "distortion");
     }
 
+    /**
+     * Loads the calibration matrices from the filesystem, which were created by `saveCalibration()`.
+     * @param intrinsicFile is the path to the file containing the intrinsic matrix
+     * @param distFile is the path to the file containing the extrinsic matrix
+     */
     public void loadCalibration(String intrinsicFile, String distFile) {
         loadDoubleMat(intrinsic, intrinsicFile);
         loadDoubleMat(distCoeffs, distFile);
@@ -76,7 +111,7 @@ public class Calibration {
         }
     }
 
-    public void loadDoubleMat(final Mat mat, final String fileName) {
+    private void loadDoubleMat(final Mat mat, final String fileName) {
         final long count = mat.total() * mat.channels();
         final List<Double> list = new ArrayList<>();
         try (final DataInputStream inStream = new DataInputStream(new FileInputStream(fileName))) {
@@ -93,6 +128,11 @@ public class Calibration {
         mat.put(0, 0, buff);
     }
 
+    /**
+     * Finds and draws the points on the corners of the inner chessboard squares if they were found.
+     * @param frame the matrix representing an image, where corners will be drawn
+     * @return true if the chessboard pattern was recognised and false if not
+     */
     public boolean findAndDrawPoints(Mat frame) {
         Mat gray = new Mat();
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
@@ -119,6 +159,9 @@ public class Calibration {
         onCalibrated.invoke();
     }
 
+    /**
+     * Updates the calibration matrices with the last point coordinates found.
+     */
     public void newSnapshot() {
         numSnapshots++;
         imagePoints.add(imageCorners.clone());
@@ -129,6 +172,9 @@ public class Calibration {
         }
     }
 
+    /**
+     * This is the interface for the callback function called after the calibration has been finished.
+     */
     public interface OnCalibrated {
         void invoke();
     }
