@@ -1,5 +1,6 @@
 package com.fmph.kai;
 
+import com.fmph.kai.camera.Calibration;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.gui.CameraCalibrationWindow;
 import com.fmph.kai.gui.ImageCanvas;
@@ -44,6 +45,8 @@ public class InterferenceApplication extends Application {
 
     private Capture capture;
     private Compute compute;
+    private Calibration calibration;
+    private boolean useCalibration;
 
     TextArea textArea;
 
@@ -100,11 +103,10 @@ public class InterferenceApplication extends Application {
         Menu editMenu = new Menu("Edit");
         MenuItem openMenuItem = new MenuItem("Open");
         MenuItem startCaptureMenuItem = new MenuItem("Start capture");
-        MenuItem setLineSizeMenuItem = new MenuItem("Line size");
         MenuItem resetLineMenuItem = new MenuItem("Reset line");
         MenuItem cameraCalibrationMenuItem = new MenuItem("Camera calibration");
         fileMenu.getItems().addAll(openMenuItem, cameraCalibrationMenuItem, startCaptureMenuItem);
-        editMenu.getItems().addAll(setLineSizeMenuItem, resetLineMenuItem);
+        editMenu.getItems().addAll(resetLineMenuItem);
         menu.getMenus().addAll(fileMenu, editMenu);
         borderPane.setTop(menu);
 
@@ -139,6 +141,8 @@ public class InterferenceApplication extends Application {
         bottom.setPadding(new Insets(5));
 
         // Image tools
+        calibration = new Calibration();
+        useCalibration = false;
         VBox vboxImage = new VBox(10);
         vboxImage.setPadding(new Insets(15,5,10,5));
         vboxImage.setStyle("-fx-border-color: silver");
@@ -151,6 +155,7 @@ public class InterferenceApplication extends Application {
         Button btnCalibration = new Button("Select calibration file");
         btnCalibration.setPrefWidth(140);
         CheckBox chkCalibration = new CheckBox("use the calibration");
+        chkCalibration.setDisable(true);
         hboxImage1.getChildren().addAll(lblCapture, tglCapture, btnUploadImage, btnCalibration, chkCalibration);
         vboxImage.getChildren().addAll(hboxImage1);
         
@@ -312,22 +317,8 @@ public class InterferenceApplication extends Application {
             imageCanvas.zoom(e.getDeltaY(), new Vector2D(e.getX(), e.getY()));
         });
 
-        setLineSizeMenuItem.setOnAction(e -> {
-            TextInputDialog tid = new TextInputDialog();
-            tid.setHeaderText("Enter new line size:");
-            tid.setOnHidden(event -> {
-                // lineSize = Double.parseDouble(tid.getEditor().getText());
-            });
-            tid.show();
-        });
-
-        setLineSizeMenuItem.setOnAction(e -> {
-
-        });
-
         resetLineMenuItem.setOnAction(e -> {
             imageCanvas.resetLine();
-            //need to reset line Xs and Ys!!
         });
 
         cameraCalibrationMenuItem.setOnAction(e -> {
@@ -347,10 +338,12 @@ public class InterferenceApplication extends Application {
         });
 
         btnCalibration.setOnAction(e -> {
-            File file = getImageFromFilesystem();
-            if (file != null) {
-                //do smth with calibration file, idk what
-            }
+            loadCalibrationFiles();
+            chkCalibration.setDisable(false);
+        });
+
+        chkCalibration.selectedProperty().addListener((obs, oldValue, newValue) -> {
+            useCalibration = newValue;
         });
 
         capture = new Capture();
@@ -390,7 +383,13 @@ public class InterferenceApplication extends Application {
                         ExceptionHandler.handle(exception);
                     }
                     startCaptureMenuItem.setText("Stop capture");
-                    capture.setOnFrameReceived(frame -> imageCanvas.setImage(Capture.Mat2Image(frame)));
+                    capture.setOnFrameReceived(frame -> {
+                        if (useCalibration) {
+                            imageCanvas.setImage(Capture.Mat2Image(calibration.calibrateImage(frame)));
+                        } else {
+                            imageCanvas.setImage(Capture.Mat2Image(frame));
+                        }
+                    });
                 });
             } catch (Capture.CaptureException exception) {
                 ExceptionHandler.handle(exception);
@@ -423,6 +422,22 @@ public class InterferenceApplication extends Application {
                 new FileChooser.ExtensionFilter("PNG", "*.png")
         );
         return fileChooser.showOpenDialog(stage);
+    }
+
+    private void loadCalibrationFiles() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose the intrinsic file");
+        fileChooser.setInitialDirectory(
+                new File(System.getProperty("user.home"))
+        );
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("All Files", "*")
+        );
+        File intrinsic = fileChooser.showOpenDialog(stage);
+        fileChooser.setInitialDirectory(intrinsic.getParentFile());
+        fileChooser.setTitle("Choose the distortion coefficients file");
+        File dist = fileChooser.showOpenDialog(stage);
+        calibration.loadCalibration(intrinsic.getAbsolutePath(), dist.getAbsolutePath());
     }
 
     public static void main(String[] args) {

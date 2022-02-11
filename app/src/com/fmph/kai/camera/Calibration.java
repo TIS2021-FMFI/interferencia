@@ -18,7 +18,7 @@ public class Calibration {
     private MatOfPoint2f imageCorners = new MatOfPoint2f();
     private boolean calibrated = false;
     private int numSnapshots = 0;
-    private final int numRequired ;
+    private final int numRequired;
     private Size size;
     private OnCalibrated onCalibrated;
 
@@ -28,6 +28,10 @@ public class Calibration {
         for (double j = 0; j < size.width * size.height; j++) {
             obj.push_back(new MatOfPoint3f(new Point3(j / size.width, j % size.height, 0.0f)));
         }
+    }
+
+    public Calibration() {
+        numRequired = 0;
     }
 
     public boolean isCalibrated() {
@@ -51,6 +55,12 @@ public class Calibration {
     private void saveCalibration() {
         saveDoubleMat(intrinsic, "intrinsic");
         saveDoubleMat(distCoeffs, "distortion");
+    }
+
+    public void loadCalibration(String intrinsicFile, String distFile) {
+        loadDoubleMat(intrinsic, intrinsicFile);
+        loadDoubleMat(distCoeffs, distFile);
+        calibrated = true;
     }
 
     private void saveDoubleMat(final Mat mat, final String fileName) {
