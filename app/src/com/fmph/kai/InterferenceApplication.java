@@ -367,6 +367,7 @@ public class InterferenceApplication extends Application {
                 if ((newLambda >= Compute.MINIMUM_ACCEPTABLE_LAMBDA) && (newLambda <= Compute.MAXIMUM_ACCEPTABLE_LAMBDA))
                    compute.lambdaHandler = newLambda;
                 angleText = "";
+		writer = null;
                 try { runComputationForSingleLine(true); } catch (IOException ioe) {}
             } catch (NumberFormatException | NoSuchElementException exception) {
                 ExceptionHandler.handle(exception);
@@ -406,6 +407,7 @@ public class InterferenceApplication extends Application {
             if (e.getButton() == MouseButton.PRIMARY && imageCanvas.leftClick(new Vector2D(e.getX(), e.getY()))) {
                 if (compute.lengthLen > 0) {
                     angleText = "";
+		    wrter = null;
                     try { runComputationForSingleLine(true); } catch (IOException ioe) {}
 
 
