@@ -45,8 +45,6 @@ public class ImageCanvas extends Canvas {
         gc.fillRect(0, 0, getWidth(), getHeight());
         if (image != null) {
             gc.drawImage(image, imagePosition.x, imagePosition.y, imageWidth, imageWidth * aspectRatio);
-            compute.maxMouseX = (int) getWidth();
-            compute.maxMouseY = (int) (image.getHeight() * getWidth() / image.getWidth());
             if (line != null)
                 line.draw();
         }
@@ -160,5 +158,20 @@ public class ImageCanvas extends Canvas {
         imageWidth += d;
         imagePosition = imagePosition.add(mousePosition.multiply(d).divide(getWidth()).multiply(-1));
         reset();
+    }
+
+
+    public double zoomFreeCoordinateX(int x)
+    {
+        //double scale_q = image.getWidth() / imageWidth;
+        double transformedX = (x - imagePosition.x) / imageWidth * image.getWidth();
+        return transformedX;
+    }
+
+    public double zoomFreeCoordinateY(int y)
+    {
+        double scale_q = image.getWidth() / imageWidth;
+        double transformedY = (y - imagePosition.y) / (imageWidth * aspectRatio)  * image.getHeight();
+        return transformedY;
     }
 }

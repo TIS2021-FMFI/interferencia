@@ -7,9 +7,9 @@ public class Formula {
     private double precision = 0.000001;
 
     /** minimum possible radius of sample curvature, algorithm parameter */
-    public double r1 = 200;
+    public static final double LOWER_BOUND_FOR_R = 200;
     /** maximum possible radius of sample curvature, algorithm parameter */
-    public double r2 = 25000;
+    public static final double UPPER_BOUND_FOR_R = 25000;
     /** distance between sample to screen, algorithm parameter */
     public double d = 100;
     /** wave length of the laser, algorithm parameter */
@@ -41,8 +41,8 @@ public class Formula {
      */
     public double finalR(double x1, double x2) {
 
-            double left = r1;
-            double right = r2;
+            double left = LOWER_BOUND_FOR_R;
+            double right = UPPER_BOUND_FOR_R;
 
             double lF = getR_f(left, x1, x2);
             double rF = getR_f(right, x1, x2);
@@ -69,5 +69,4 @@ public class Formula {
            // System.out.println("D = "+ d + "R = " + (right + left) / 2);
         return (right + left) / 2;
     }
-
 }

@@ -2,18 +2,31 @@ package com.fmph.kai.util;
 
 
 
+import com.fmph.kai.gui.ImageCanvas;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
 
 
-import java.awt.*;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Compute {
 
-    public int maxMouseX = 0;
-    public int maxMouseY = 0;
+    public static final double MINIMUM_ACCEPTABLE_D = 5;
+    public static final double MAXIMUM_ACCEPTABLE_D = 1000;
+    public static final double MINIMUM_ACCEPTABLE_LAMBDA = 0.000300;
+    public static final double MAXIMUM_ACCEPTABLE_LAMBDA = 0.001000;
+    public static final double MINIMUM_ACCEPTABLE_A = 0.1;
+    public static final double MAXIMUM_ACCEPTABLE_A = 180;
+    public static final double MINIMUM_ACCEPTABLE_EPSILON = 0.00005;
+    public static final double MAXIMUM_ACCEPTABLE_EPSILON = 0.1;
+    public static final double MINIMUM_ACCEPTABLE_LEFTBORDER = 0;
+    public static final double MAXIMUM_ACCEPTABLE_LEFTBORDER = 100;
+    public static final double MINIMUM_ACCEPTABLE_BOTTOMBORDER = 0;
+    public static final double MAXIMUM_ACCEPTABLE_BOTTOMBORDER = 1.0;
 
     public int clickLineX1 = -1;
     public int clickLineY1 = -1;
@@ -28,23 +41,34 @@ public class Compute {
     public double lengthClickLen = -1;
     public double lengthLen = -1;
     public int lineWidth = 5;
-    public int numMaxima = 2; // <- use this value for the calculations
+    public int numIterations = 2; // <- use this value for the calculations
 
     public double ymin,ymax;
     public double x1, y1, x2, y2;
     public double x1Len, y1Len, x2Len, y2Len;
-    public double dHandler;
+    public double dHandler = 100;
+    public double lambdaHandler = 0.000650;
+    public  double alpha = 5;
+    public double chybickaHandler = 0.005;
+    public  double maximumIgnoreBorderLeftHandler = 0.10;
+    public  double maximumIgnoreBorderBottomHandler = 0.4;
+    public String scanHandler = "scan.xyz";
 
-    public double chybicka = 0.005;
+    public double chybicka;
+    public double leftBorder;
+    public double bottomBorder;
+
+
 
     public ArrayList<MPoint> pointlist = new ArrayList<MPoint>();
 
     public ArrayList<MPoint> maxlist = new ArrayList<MPoint>();
 
-    public Compute()
-    {
+    public Compute()  {
 
     }
+
+
 
     public int getMaxNumber(){
         return maxlist.size();
@@ -92,15 +116,18 @@ public class Compute {
             lmax = pointlist.get(0);
         }
         for (MPoint p:pointlist) {
+            if (maxlist.size() >= numIterations + 1) break;
             if (p.ldiff > 0 && p.rdiff < 0){
                 //ciste maximum
-                maxlist.add(p);
+                if ((p.seq >= leftBorder) && (p.suc >= bottomBorder))
+                  maxlist.add(p);
             } else if (p.ldiff == 0 && p.rdiff < 0){
                 //konstanta a klesa
                 if (lmax != null){
                     //maximum medzi lmax a p
                     int idx = (lmax.seq + p.seq)/2;  //zaokruhloanie, zoberie sa nejaky v strede
-                    maxlist.add(pointlist.get(idx));
+                    if ((p.seq >= leftBorder) && (p.suc >= bottomBorder))
+                      maxlist.add(pointlist.get(idx));
                     lmax = null;   //lmax sa pouzilo - bude null
                 } else {
                     //nic sa neudeje... nie je lmax takze to klesalo potom konst a dalej klesa
@@ -127,7 +154,7 @@ public class Compute {
 
     private double color2intensity(Color c)
     {
-        return c.getRed() + c.getGreen() + c.getBlue();
+        return (c.getRed() + c.getGreen() + c.getBlue()) / 3;
     }
 
     private void calculateIntensity(PixelReader pixelreader, MPoint p) {
@@ -153,30 +180,19 @@ public class Compute {
         p.suc = psum / counted;
     }
 
-    public double zoomFreeCoordinateX(double imageWidth, int x)
-    {
-        return (x * imageWidth)/(double)maxMouseX;
-    }
-
-    public double zoomFreeCoordinateY(double imageHeight, int y)
-    {
-        return (y * imageHeight)/(double)maxMouseY;
-    }
-
-    public boolean colorize(Image image) {
+    public boolean colorize(ImageCanvas canvas) {
+        Image image = canvas.getImage();
         PixelReader pixelreader = image.getPixelReader();
-        int maxImageX = (int) image.getWidth();
-        int maxImageY = (int) image.getHeight();
 
-        x1 = zoomFreeCoordinateX(maxImageX, clickLineX1);
-        y1 = zoomFreeCoordinateY(maxImageY, clickLineY1);
-        x2 = zoomFreeCoordinateX(maxImageX, clickLineX2);
-        y2 = zoomFreeCoordinateY(maxImageY, clickLineY2);
+        x1 = canvas.zoomFreeCoordinateX(clickLineX1);
+        y1 = canvas.zoomFreeCoordinateY(clickLineY1);
+        x2 = canvas.zoomFreeCoordinateX(clickLineX2);
+        y2 = canvas.zoomFreeCoordinateY(clickLineY2);
 
-        x1Len = zoomFreeCoordinateX(maxImageX, clickLenX1);
-        y1Len = zoomFreeCoordinateY(maxImageY, clickLenY1);
-        x2Len = zoomFreeCoordinateX(maxImageX, clickLenX2);
-        y2Len = zoomFreeCoordinateY(maxImageY, clickLenY2);
+        x1Len = canvas.zoomFreeCoordinateX(clickLenX1);
+        y1Len = canvas.zoomFreeCoordinateY(clickLenY1);
+        x2Len = canvas.zoomFreeCoordinateX(clickLenX2);
+        y2Len = canvas.zoomFreeCoordinateY(clickLenY2);
 
         interpolate(x1, y1, x2, y2);
 
@@ -196,6 +212,7 @@ public class Compute {
             return true;
         } catch (Exception e){
             System.out.println(e);
+            e.printStackTrace();
             return false;
         }
     }
