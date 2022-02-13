@@ -74,12 +74,10 @@ public class Capture {
         }
         capturing = true;
         Runnable frameGrabber = () -> {
-            Mat frame = grabFrame();
-            Platform.runLater(() -> {
-                if (capturing && capture.isOpened()) {
-                    onFrameReceived.invoke(frame);
-                }
-            });
+            if (capturing && capture.isOpened()) {
+                Mat frame = grabFrame();
+                onFrameReceived.invoke(frame);
+            }
         };
         timer = Executors.newSingleThreadScheduledExecutor();
         timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
