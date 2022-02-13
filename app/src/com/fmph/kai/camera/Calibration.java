@@ -1,6 +1,7 @@
 package com.fmph.kai.camera;
 
 import com.fmph.kai.util.ExceptionHandler;
+import javafx.application.Platform;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class Calibration {
     private final Mat intrinsic = new Mat(3, 3, CvType.CV_32FC1);
-    private final Mat distCoeffs = new Mat();
+    private final Mat distCoeffs;
     private final MatOfPoint3f obj = new MatOfPoint3f();
     private final List<Mat> imagePoints = new ArrayList<>();
     private final List<Mat> objectPoints = new ArrayList<>();
@@ -23,19 +24,20 @@ public class Calibration {
     private int numSnapshots = 0;
     private final int numRequired;
     private Size size;
+    private Size boardSize;
     private OnCalibrated onCalibrated;
 
     /**
      * Creates the Calibration instance with the specified size and the number of required snapshots.
      * Creates the `obj` matrix, which is the 3d representation of the board.
-     * @param size the size of the chessboard (number of horizontal and vertical inner squares)
      * @param numRequiredSnapshots the number of the snapshots to be taken for the calibration
      */
-    public Calibration(Size size, int numRequiredSnapshots) {
-        this.size = size;
+    public Calibration(Size boardSize, int numRequiredSnapshots) {
         this.numRequired = numRequiredSnapshots;
-        for (double j = 0; j < size.width * size.height; j++) {
-            obj.push_back(new MatOfPoint3f(new Point3(j / size.width, j % size.height, 0.0f)));
+        this.boardSize = boardSize;
+        distCoeffs = new Mat();
+        for (double j = 0; j < boardSize.width * boardSize.height; j++) {
+            obj.push_back(new MatOfPoint3f(new Point3(j / boardSize.width, j % boardSize.height, 0.0f)));
         }
     }
 
@@ -45,6 +47,7 @@ public class Calibration {
      */
     public Calibration() {
         numRequired = 0;
+        distCoeffs = new Mat(1, 5, CvType.CV_64FC1);
     }
 
     /**
@@ -82,9 +85,10 @@ public class Calibration {
         return undistorted;
     }
 
-    private void saveCalibration() {
-        saveDoubleMat(intrinsic, "intrinsic");
-        saveDoubleMat(distCoeffs, "distortion");
+
+    public void saveCalibration(String directory) {
+        saveDoubleMat(intrinsic, directory + "/intrinsic");
+        saveDoubleMat(distCoeffs, directory + "/distortion");
     }
 
     /**
@@ -136,12 +140,12 @@ public class Calibration {
     public boolean findAndDrawPoints(Mat frame) {
         Mat gray = new Mat();
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
-        boolean found = Calib3d.findChessboardCorners(gray, size, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
+        boolean found = Calib3d.findChessboardCorners(gray, boardSize, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
         if (found) {
             TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
             Imgproc.cornerSubPix(gray, imageCorners, new Size(11, 11), new Size(-1, -1), term);
             size = gray.size();
-            Calib3d.drawChessboardCorners(frame, size, imageCorners, true);
+            Calib3d.drawChessboardCorners(frame, boardSize, imageCorners, true);
             return true;
         }
         return false;
@@ -155,7 +159,6 @@ public class Calibration {
         Calib3d.calibrateCamera(objectPoints, imagePoints, size, intrinsic, distCoeffs, rvecs, tvecs);
         calibrated = true;
 
-        saveCalibration();
         onCalibrated.invoke();
     }
 
