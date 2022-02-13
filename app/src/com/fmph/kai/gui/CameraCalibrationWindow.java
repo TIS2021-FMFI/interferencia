@@ -3,6 +3,7 @@ package com.fmph.kai.gui;
 import com.fmph.kai.camera.Calibration;
 import com.fmph.kai.camera.Capture;
 import com.fmph.kai.util.ExceptionHandler;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,8 +12,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.opencv.core.Mat;
 import org.opencv.core.Size;
+
+import java.io.File;
 
 /**
  * Handles the GUI of the calibration window.
@@ -82,8 +87,14 @@ public class CameraCalibrationWindow extends Stage {
         Button btnStartCamera = new Button("Start camera");
         btnTakeSnapshot = new Button("Take snapshot (" + 0 + "/" + numRequired + ")");
         btnTakeSnapshot.setDisable(true);
-        calibration.setOnCalibrated(() -> btnTakeSnapshot.setDisable(true));
-        bottom.getChildren().addAll(btnStartCamera, btnTakeSnapshot);
+        Button btnSaveCalibration = new Button("Save calibration");
+        btnSaveCalibration.setDisable(true);
+        Calibration.OnCalibrated onCalibrated = () -> {
+            btnTakeSnapshot.setDisable(true);
+            btnSaveCalibration.setDisable(false);
+        };
+        calibration.setOnCalibrated(onCalibrated);
+        bottom.getChildren().addAll(btnStartCamera, btnTakeSnapshot, btnSaveCalibration);
         pane.setBottom(bottom);
 
         // SCENE
@@ -99,7 +110,7 @@ public class CameraCalibrationWindow extends Stage {
             verSize = Integer.parseInt(txtVerticalCorners.getText());
             numRequired = Integer.parseInt(txtSnapshots.getText());
             calibration = new Calibration(new Size(horSize, verSize), numRequired);
-            calibration.setOnCalibrated(() -> btnTakeSnapshot.setDisable(true));
+            calibration.setOnCalibrated(onCalibrated);
             btnTakeSnapshot.setText("Take snapshot (" + 0 + "/" + numRequired + ")");
         });
 
@@ -120,11 +131,7 @@ public class CameraCalibrationWindow extends Stage {
                         if (calibration.isCalibrated()) {
                             calibratedImage = Capture.Mat2Image(calibration.calibrateImage(frame));
                         }
-                        if (calibration.findAndDrawPoints(frame)) {
-                            btnTakeSnapshot.setDisable(false);
-                        } else {
-                            btnTakeSnapshot.setDisable(true);
-                        }
+                        btnTakeSnapshot.setDisable(!calibration.findAndDrawPoints(frame));
                         imgNormal.setImage(Capture.Mat2Image(frame));
                         imgCalibrated.setImage(calibratedImage);
                     });
@@ -138,6 +145,17 @@ public class CameraCalibrationWindow extends Stage {
         btnTakeSnapshot.setOnAction(e -> {
             calibration.newSnapshot();
             btnTakeSnapshot.setText("Take snapshot (" + calibration.getNumSnapshots() + "/" + numRequired + ")");
+        });
+
+        // Save the calibration
+        btnSaveCalibration.setOnAction(e -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setInitialDirectory(new File(System.getProperty("user.home")));
+            directoryChooser.setTitle("Select the directory to save the calibration into");
+            File dir = directoryChooser.showDialog(this);
+            if (dir != null) {
+                calibration.saveCalibration(dir.getAbsolutePath());
+            }
         });
 
         this.setOnHiding(e -> {

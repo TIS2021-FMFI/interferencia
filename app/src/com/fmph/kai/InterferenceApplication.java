@@ -339,7 +339,6 @@ public class InterferenceApplication extends Application {
                 scanR();
 
                 }
-
         );
 
         btnSubmitParameters.setOnAction(e -> {
