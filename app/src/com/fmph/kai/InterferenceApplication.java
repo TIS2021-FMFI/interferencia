@@ -78,6 +78,7 @@ public class InterferenceApplication extends Application {
         this.stage = stage;
         root = new Group();
         scene = new Scene(root, width, height);
+        stage.setResizable(false);
         initializeGUI();
         stage.setTitle("Interference analyzer");
 
@@ -119,7 +120,9 @@ public class InterferenceApplication extends Application {
                 try {
                     x11 = (1 - (formula.d / (formula.d + (r / 2)))) * x1;
                     y11 = r - Math.sqrt(r * r - x11 * x11);
-                }catch (Exception e){ }
+                } catch (Exception e) {
+                    ExceptionHandler.handle(e);
+                }
 
                 writer.write(String.format("%.16f ",(x11*Math.sin(currentAngle))));
                 writer.write(String.format("%.16f ",(x11*Math.cos(currentAngle))));
@@ -204,21 +207,21 @@ public class InterferenceApplication extends Application {
         lineChart.setMaxWidth(width/2 );
         lineChart.prefHeight(1000);
         lineChart.setMaxHeight(height/2);
-        VBox vboxGrafOutput = new VBox(10);
-        vboxGrafOutput.setPadding(new Insets(10,10,10,10));
-        vboxGrafOutput.setMaxWidth(width/2-20);
-        vboxGrafOutput.setStyle("-fx-border-color: silver");
-        vboxGrafOutput.getChildren().add(lineChart);
+        VBox vboxGraphOutput = new VBox(10);
+        vboxGraphOutput.setPadding(new Insets(10,10,10,10));
+        vboxGraphOutput.setMaxWidth(width/2-20);
+        vboxGraphOutput.setStyle("-fx-border-color: silver");
+        vboxGraphOutput.getChildren().add(lineChart);
 
         // Output box
         textArea = TextAreaBuilder.create()
                 .wrapText(true)
                 .build();
         textArea.setMaxWidth(width/2-40);
-        vboxGrafOutput.getChildren().add(textArea);
+        vboxGraphOutput.getChildren().add(textArea);
         textArea.setEditable(false);
 
-        borderPane.setRight(vboxGrafOutput);
+        borderPane.setRight(vboxGraphOutput);
 
         // Bottom pane
         HBox bottom = new HBox(5);
@@ -260,12 +263,20 @@ public class InterferenceApplication extends Application {
         sldLineThickness.setMajorTickUnit(1);
         Label lblSliderValue = new Label(Double.toString(sldLineThickness.getValue()));
         sldLineThickness.valueProperty().addListener(
-                (observable, oldValue, newValue) ->
-                { lblSliderValue.setText(String.format("%.0f", newValue));
-                  compute.lineWidth = (int)(0.5 + newValue.doubleValue()); });
+                (observable, oldValue, newValue) -> {
+                    lblSliderValue.setText(String.format("%.0f", newValue.doubleValue()));
+                    compute.lineWidth = (int)(0.5 + newValue.doubleValue());
+                    try { runComputationForSingleLine(true); } catch (IOException ioe) { ExceptionHandler.handle(ioe); }
+                });
         Label lblParameterNumberMaxima = new Label("# of iterations =");
         TextField txtNumberMax = new TextField();
         txtNumberMax.setPrefWidth(50);
+        txtNumberMax.textProperty().addListener((obs, oldValue, newValue) -> {
+            try {
+                compute.numIterations = Integer.parseInt(txtNumberMax.getText());
+                runComputationForSingleLine(true);
+            } catch (Exception ignored) {}
+        });
         HBox hboxCanvasBottom = new HBox(5);
         hboxCanvasBottom.getChildren().addAll(lblLineThickness, sldLineThickness, lblSliderValue);
         HBox hboxCanvasBottomMax = new HBox(5);
@@ -316,7 +327,7 @@ public class InterferenceApplication extends Application {
         hboxDalsieP.getChildren().addAll(lblParameterAlfa,txtAlfa, lblParameterEpsilon, txtEpsilon, lblParameterMinX,txtMinX,lblParameterMinY,txtMinY);
         vboxCalculation.getChildren().addAll(hboxCalculation1, hboxDalsieP);
 
-        //auto finding max min and 3D Scanning
+        // Auto finding max min and 3D Scanning
         VBox vBoxScanning = new VBox(5);
         vBoxScanning.setPadding(new Insets(15,5,10,5));
         vBoxScanning.setStyle("-fx-border-color: silver");
@@ -335,24 +346,20 @@ public class InterferenceApplication extends Application {
         txtNazovSub.setText(compute.scanHandler);
 
         btnAutoMaxMin.setOnAction( event -> {
-
                 scanR();
-
-                }
-
+            }
         );
 
         btnSubmitParameters.setOnAction(e -> {
             try {
-                double newD = Double.valueOf(txtD.getText());
-                double newLambda = Double.valueOf(txtLambda.getText()) / 1000000;
-                double newAlpha =  Double.valueOf(txtAlfa.getText());
-                double newEpsilon =  Double.valueOf(txtEpsilon.getText());
-                double newMinX =  Double.valueOf(txtMinX.getText());
-                double newMinY =  Double.valueOf(txtMinY.getText());
-                double newNumMaxima =  Double.valueOf(txtNumberMax.getText());
+                double newD = Double.parseDouble(txtD.getText());
+                double newLambda = Double.parseDouble(txtLambda.getText()) / 1000000;
+                double newAlpha =  Double.parseDouble(txtAlfa.getText());
+                double newEpsilon =  Double.parseDouble(txtEpsilon.getText());
+                double newMinX =  Double.parseDouble(txtMinX.getText());
+                double newMinY =  Double.parseDouble(txtMinY.getText());
 
-                compute.numIterations = (int) newNumMaxima;
+                compute.numIterations = Integer.parseInt(txtNumberMax.getText());
 
                 if ((newEpsilon >= Compute.MINIMUM_ACCEPTABLE_EPSILON) && (newEpsilon <= Compute.MAXIMUM_ACCEPTABLE_EPSILON))
                     compute.chybickaHandler = newEpsilon;
@@ -368,7 +375,7 @@ public class InterferenceApplication extends Application {
                    compute.lambdaHandler = newLambda;
                 angleText = "";
 		        writer = null;
-                try { runComputationForSingleLine(true); } catch (IOException ioe) {}
+                try { runComputationForSingleLine(true); } catch (IOException ioe) { ExceptionHandler.handle(ioe); }
             } catch (NumberFormatException | NoSuchElementException exception) {
                 ExceptionHandler.handle(exception);
             }
@@ -391,7 +398,7 @@ public class InterferenceApplication extends Application {
 
         // ImageCanvas
         imageCanvas = new ImageCanvas(width/2, height-200, compute);
-        imageCanvas.heightProperty().bind(vboxGrafOutput.heightProperty());
+        imageCanvas.heightProperty().bind(vboxGraphOutput.heightProperty());
         imageCanvas.reset();
         borderPane.setLeft(imageCanvas);
 
@@ -408,9 +415,7 @@ public class InterferenceApplication extends Application {
                 if (compute.lengthLen > 0) {
                     angleText = "";
 		            writer = null;
-                    try { runComputationForSingleLine(true); } catch (IOException ioe) {}
-
-
+                    try { runComputationForSingleLine(true); } catch (IOException ioe) { ExceptionHandler.handle(ioe); }
                 } else {
                     compute.lengthClickLen = Math.sqrt((double) (compute.clickLenX1-compute.clickLenX2)*(compute.clickLenX1-compute.clickLenX2) + (double) (compute.clickLenY1-compute.clickLenY2)*(compute.clickLenY1-compute.clickLenY2));
                     // Ask for number of maximums
@@ -549,6 +554,7 @@ public class InterferenceApplication extends Application {
 
     private void runComputationForSingleLine(boolean updateChart) throws IOException
     {
+        if (imageCanvas.getImage() == null || imageCanvas.getLine() == null) return;
         compute.colorize(imageCanvas);
         double yborder = (compute.ymax - compute.ymin) * 0.1;
         if (updateChart) {
@@ -568,18 +574,13 @@ public class InterferenceApplication extends Application {
             series.setName("Interference");
             for (MPoint p : compute.pointlist) {
                 series.getData().add(new XYChart.Data<>(p.seq, p.suc));
-                //series.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
             }
             XYChart.Series<Number, Number> maxes = new XYChart.Series<>();
             maxes.setName("Maxima");
 
             for (MPoint p : compute.maxlist) {
                 maxes.getData().add(new XYChart.Data<>(p.seq, p.suc));
-                //maxes.getData().add(new XYChart.Data<>(p.seq, p.suc*10-10));
             }
-            //for (double x = 0; x < 5*Math.PI; x += Math.PI/24) {
-            //    series.getData().add(new XYChart.Data<>(x, Math.sin(x)));
-            //}
 
             lineChart.getData().add(series);
             lineChart.getData().add(maxes);

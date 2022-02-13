@@ -101,6 +101,16 @@ public class ImageCanvas extends Canvas {
     }
 
     /**
+     * Returns the line.
+     * @return line
+     * @see Line
+     */
+    public Line getLine() {
+        if (line != null && line.getStop() == null) return null;
+        return line;
+    }
+
+    /**
      * Defines the behaviour on the left mouse click.
      * @param mousePosition the 2d vector representing the mouse position
      * @return true if this is not the first click on the canvas
@@ -161,14 +171,14 @@ public class ImageCanvas extends Canvas {
     }
 
 
-    public double zoomFreeCoordinateX(int x)
+    public double zoomFreeCoordinateX(double x)
     {
         //double scale_q = image.getWidth() / imageWidth;
         double transformedX = (x - imagePosition.x) / imageWidth * image.getWidth();
         return transformedX;
     }
 
-    public double zoomFreeCoordinateY(int y)
+    public double zoomFreeCoordinateY(double y)
     {
         double scale_q = image.getWidth() / imageWidth;
         double transformedY = (y - imagePosition.y) / (imageWidth * aspectRatio)  * image.getHeight();
