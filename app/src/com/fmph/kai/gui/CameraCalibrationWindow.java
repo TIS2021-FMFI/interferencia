@@ -116,6 +116,15 @@ public class CameraCalibrationWindow extends Stage {
 
         // VideoCapture
         capture = new Capture();
+        capture.setOnFrameReceived(frame -> {
+            Image calibratedImage = null;
+            if (calibration.isCalibrated()) {
+                calibratedImage = Capture.Mat2Image(calibration.calibrateImage(frame));
+            }
+            btnTakeSnapshot.setDisable(!calibration.findAndDrawPoints(frame));
+            imgNormal.setImage(Capture.Mat2Image(frame));
+            imgCalibrated.setImage(calibratedImage);
+        });
         btnStartCamera.setOnAction(e -> {
             try {
                 if (capture.isCapturing()) {
@@ -126,15 +135,6 @@ public class CameraCalibrationWindow extends Stage {
                 } else {
                     capture.start(cmbSelectCamera.getValue());
                     btnStartCamera.setText("Stop camera");
-                    capture.setOnFrameReceived(frame -> {
-                        Image calibratedImage = null;
-                        if (calibration.isCalibrated()) {
-                            calibratedImage = Capture.Mat2Image(calibration.calibrateImage(frame));
-                        }
-                        btnTakeSnapshot.setDisable(!calibration.findAndDrawPoints(frame));
-                        imgNormal.setImage(Capture.Mat2Image(frame));
-                        imgCalibrated.setImage(calibratedImage);
-                    });
                 }
             } catch (Capture.CaptureException exception) {
                 ExceptionHandler.handle(exception);

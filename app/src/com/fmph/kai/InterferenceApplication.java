@@ -79,6 +79,7 @@ public class InterferenceApplication extends Application {
         root = new Group();
         scene = new Scene(root, width, height);
         stage.setResizable(false);
+        stage.getIcons().add(new Image("file:app/resources/icon.png"));
         initializeGUI();
         stage.setTitle("Interference analyzer");
 
@@ -476,16 +477,21 @@ public class InterferenceApplication extends Application {
             File file = getImageFromFilesystem();
             if (file != null) {
                 imageCanvas.setImage(new Image(file.toURI().toString()));
+                textArea.setText(textArea.getText() + "\nLoaded the " + file.getName() + " successfully.");
+            } else {
+                textArea.setText(textArea.getText() + "\nNo image selected.");
             }
         });
 
         btnCalibration.setOnAction(e -> {
             loadCalibrationFiles();
+            textArea.setText(textArea.getText() + "\nThe calibration has been loaded successfully.");
             chkCalibration.setDisable(false);
         });
 
         chkCalibration.selectedProperty().addListener((obs, oldValue, newValue) -> {
             useCalibration = newValue;
+            textArea.setText(textArea.getText() + "\nCalibration: " + (useCalibration ? "on" : "off"));
         });
 
         capture = new Capture();
@@ -521,8 +527,10 @@ public class InterferenceApplication extends Application {
                 result.ifPresent(cameraIndex -> {
                     try {
                         capture.start(cameraIndex);
+                        textArea.setText(textArea.getText() + "\nThe capture process has started successfully.");
                     } catch (Capture.CaptureException exception) {
                         ExceptionHandler.handle(exception);
+                        return;
                     }
                     startCaptureMenuItem.setText("Stop capture");
                     capture.setOnFrameReceived(frame -> {
@@ -544,6 +552,7 @@ public class InterferenceApplication extends Application {
                 }
                 startCaptureMenuItem.setText("Start capture");
                 capture.stop();
+                textArea.setText(textArea.getText() + "\nCapture has stopped.");
             } catch (Capture.CaptureException exception) {
                 ExceptionHandler.handle(exception);
             }

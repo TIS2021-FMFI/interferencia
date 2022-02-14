@@ -143,7 +143,11 @@ public class Calibration {
         boolean found = Calib3d.findChessboardCorners(gray, boardSize, imageCorners, Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
         if (found) {
             TermCriteria term = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 30, 0.1);
-            Imgproc.cornerSubPix(gray, imageCorners, new Size(11, 11), new Size(-1, -1), term);
+            try {
+                Imgproc.cornerSubPix(gray, imageCorners, new Size(11, 11), new Size(-1, -1), term);
+            } catch (CvException e) {
+                return false;
+            }
             size = gray.size();
             Calib3d.drawChessboardCorners(frame, boardSize, imageCorners, true);
             return true;

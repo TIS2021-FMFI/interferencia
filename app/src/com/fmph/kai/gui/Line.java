@@ -66,7 +66,7 @@ public class Line {
      */
     public void draw() {
         gc.setLineWidth(3);
-        gc.setStroke(Color.RED);
+        gc.setStroke(Color.LIGHTCYAN);
         gc.strokeLine(start.x, start.y, stop.x, stop.y);
         gc.setFill(Color.DARKBLUE);
         gc.fillOval(stop.x-5, stop.y-5, 10, 10);
