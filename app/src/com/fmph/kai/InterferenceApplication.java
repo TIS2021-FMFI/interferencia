@@ -408,6 +408,9 @@ public class InterferenceApplication extends Application {
             File file = getImageFromFilesystem();
             if (file != null) {
                 imageCanvas.setImage(new Image(file.toURI().toString()));
+                imageCanvas.resetLine();
+                compute.clickLenX1 = -1;
+                compute.lengthLen = -1;  // request new "length" line
             }
         });
 
@@ -419,7 +422,6 @@ public class InterferenceApplication extends Application {
                     try { runComputationForSingleLine(true); } catch (IOException ioe) { ExceptionHandler.handle(ioe); }
                 } else {
                     compute.lengthClickLen = Math.sqrt((double) (compute.clickLenX1-compute.clickLenX2)*(compute.clickLenX1-compute.clickLenX2) + (double) (compute.clickLenY1-compute.clickLenY2)*(compute.clickLenY1-compute.clickLenY2));
-                    // Ask for number of maximums
                     TextInputDialog tid = new TextInputDialog();
                     tid.setHeaderText("Enter line lenght in milimeters");
                     Integer inp = null; // <- use this value for the calculations
@@ -431,6 +433,9 @@ public class InterferenceApplication extends Application {
                         }
                         compute.lengthLen = (double) inp;
                     } catch (NumberFormatException | NoSuchElementException exception) {
+                        compute.clickLenX1 = -1;
+                        compute.lengthLen = -1;
+                        imageCanvas.resetLine();
                         ExceptionHandler.handle(exception);
                     }
                 }

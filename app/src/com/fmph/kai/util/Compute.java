@@ -24,7 +24,7 @@ public class Compute {
     public static final double MINIMUM_ACCEPTABLE_EPSILON = 0.00005;
     public static final double MAXIMUM_ACCEPTABLE_EPSILON = 0.1;
     public static final double MINIMUM_ACCEPTABLE_LEFTBORDER = 0;
-    public static final double MAXIMUM_ACCEPTABLE_LEFTBORDER = 100;
+    public static final double MAXIMUM_ACCEPTABLE_LEFTBORDER = 500;
     public static final double MINIMUM_ACCEPTABLE_BOTTOMBORDER = 0;
     public static final double MAXIMUM_ACCEPTABLE_BOTTOMBORDER = 1.0;
 
@@ -188,11 +188,6 @@ public class Compute {
         y1 = canvas.zoomFreeCoordinateY(clickLineY1);
         x2 = canvas.zoomFreeCoordinateX(clickLineX2);
         y2 = canvas.zoomFreeCoordinateY(clickLineY2);
-
-        x1Len = canvas.zoomFreeCoordinateX(clickLenX1);
-        y1Len = canvas.zoomFreeCoordinateY(clickLenY1);
-        x2Len = canvas.zoomFreeCoordinateX(clickLenX2);
-        y2Len = canvas.zoomFreeCoordinateY(clickLenY2);
 
         interpolate(x1, y1, x2, y2);
 

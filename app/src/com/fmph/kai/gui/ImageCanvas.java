@@ -128,7 +128,10 @@ public class ImageCanvas extends Canvas {
                 Line.pointX(mousePosition.x, mousePosition.y, getGraphicsContext2D());
                 compute.clickLenX2 = (int) mousePosition.x;
                 compute.clickLenY2 = (int) mousePosition.y;
-
+                compute.x1Len = zoomFreeCoordinateX(compute.clickLenX1);
+                compute.y1Len = zoomFreeCoordinateY(compute.clickLenY1);
+                compute.x2Len = zoomFreeCoordinateX(compute.clickLenX2);
+                compute.y2Len = zoomFreeCoordinateY(compute.clickLenY2);
                 return true;
             }
         } else {
