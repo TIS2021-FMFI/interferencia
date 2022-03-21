@@ -22,12 +22,12 @@ public class Formula {
 
     public double getR_f(double r, double x1, double x2) {
         double res;
-        double delta1 = (r - Math.sqrt(r * r - (1 - d / (d + r / 2)*(1 - d / (d + r / 2)*x1*x1)))) *
-                (1 + ( (x1 * x1 + (d + r / 2)*(d + r / 2))) / (d + r / 2)) +
+        double delta1 = (r - Math.sqrt(r * r - (1 - d / (d + r / 2))*(1 - d / (d + r / 2))*x1*x1)) *
+                (1 + Math.sqrt(x1 * x1 + (d + r / 2)*(d + r / 2)) / (d + r / 2)) +
                 ( d * Math.sqrt(x1 * x1 + (d + r / 2) * (d + r / 2))) / (d + r / 2);
 
-        double delta2 = (r - Math.sqrt(r * r - (1 - d / (d + r / 2)*(1 - d / (d + r / 2)*x2*x2)))) *
-                (1 + ( (x2 * x2 + (d + r / 2)*(d + r / 2))) / (d + r / 2)) +
+        double delta2 = (r - Math.sqrt(r * r - (1 - d / (d + r / 2))*(1 - d / (d + r / 2))*x2*x2)) *
+                (1 + Math.sqrt(x2 * x2 + (d + r / 2)*(d + r / 2)) / (d + r / 2)) +
                 ( d * Math.sqrt(x2 * x2 + (d + r / 2) * (d + r / 2))) / (d + r / 2);
 
         res = delta2-delta1-lambda;
