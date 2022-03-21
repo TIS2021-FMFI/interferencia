@@ -22,6 +22,6 @@ Contributors:
    You can install Python 3 using their installation binaries [here](https://www.python.org/downloads/). You should check the `add Python 3 to the PATH` checkbox when prompted.
 
    You can check if you have python already installed on your machine by running `python --version`.
-3. Download [the release archive](https://github.com/TIS2021-FMFI/interferencia/releases/download/v1.0-RELEASE/production.zip) and extract it.
+3. Download [the release archive](https://github.com/TIS2021-FMFI/interferencia/releases/download/v1.0.1-RELEASE/production.zip) and extract it.
 4. Run the `run.bat` executable.
 5. Please also check out the [User manual](https://github.com/TIS2021-FMFI/interferencia/tree/main/Documentation/UserManual.pdf) for the introduction to the app functions.
